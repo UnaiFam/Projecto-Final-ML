@@ -84,6 +84,13 @@ product_encoder.fit(pd.DataFrame(['Debt collection', 'Mortgage', 'Credit card', 
        'Money transfers', 'Student loan', 'Prepaid card',
        'Other financial service']))
 
+def product_decoder(code: int) -> str:
+    """Convierte un código numérico a su nombre de producto"""
+    try:
+        return product_encoder.inverse_transform([code])[0]
+    except (ValueError, IndexError):
+        raise ValueError(f"Código inválido: {code}")
+
 sub_product_encoder = LabelEncoder()
 sub_product_encoder.fit(pd.DataFrame(['Unknown or not specified', 'Medical', 'FHA mortgage',
        'Non-federal student loan', 'Payday loan', 'Installment loan',
@@ -104,6 +111,16 @@ sub_product_encoder.fit(pd.DataFrame(['Unknown or not specified', 'Medical', 'FH
        'ID prepaid card', "Traveler's/Cashier's checks",
        'Foreign currency exchange', 'Credit repair']))
 
+def product_decoder(code: int) -> str:
+    """Convierte un código numérico a su nombre de subproducto"""
+    try:
+        return sub_product_encoder.inverse_transform([code])[0]
+    except (ValueError, IndexError):
+        raise ValueError(f"Código inválido: {code}")
+
+
+
+
 State_enc = LabelEncoder()
 State_enc.fit(pd.DataFrame(['TX', 'MA', 'CA', 'OH', 'NJ', 'ND', 'RI', 'CO', 'UT', 'AL', 'PA',
        'NY', 'NC', 'GA', 'IL', 'WI', 'MI', 'FL', 'CT', 'OR', 'VA', 'WA',
@@ -111,6 +128,13 @@ State_enc.fit(pd.DataFrame(['TX', 'MA', 'CA', 'OH', 'NJ', 'ND', 'RI', 'CO', 'UT'
        'DC', 'NV', 'ME', 'NM', 'SC', 'AZ', 'AP', 'MS', 'MN', 'ID', 'HI',
        'PR', 'Unknown', 'WV', 'WY', 'AK', 'VI', 'MT', 'DE', 'AR', 'AE',
        'SD', 'GU', 'VT', 'MH', 'PW', 'AS']) )
+def state_decoder(code: int) -> str:
+    """Convierte un código numérico a su nombre de estado"""
+    try:
+        return State_enc.inverse_transform([code])[0]
+    except (ValueError, IndexError):
+        raise ValueError(f"Código inválido: {code}")
+
 
 Issue_enc = LabelEncoder()
 Issue_enc.fit(pd.DataFrame(['Communication tactics', "Cont'd attempts collect debt not owed",
@@ -168,6 +192,12 @@ Issue_enc.fit(pd.DataFrame(['Communication tactics', "Cont'd attempts collect de
        'Shopping for a line of credit',
        'Advertising, marketing or disclosures', 'Excessive fees']) )
 
+def issue_decoder(code: int) -> str:
+    """Convierte un código numérico a su nombre de estado"""
+    try:
+        return Issue_enc.inverse_transform([code])[0]
+    except (ValueError, IndexError):
+        raise ValueError(f"Código inválido: {code}")
 
 sub_Issue_enc = LabelEncoder()
 sub_Issue_enc.fit(pd.DataFrame(['Frequent or repeated calls', 'Debt is not mine',
@@ -207,17 +237,39 @@ sub_Issue_enc.fit(pd.DataFrame(['Frequent or repeated calls', 'Debt is not mine'
        'Attempted to/Collected exempt funds',
        'Received marketing offer after opted out']) )
 
+def subissue_decoder(code: int) -> str:
+    """Convierte un código numérico a su nombre de estado"""
+    try:
+        return sub_Issue_enc.inverse_transform([code])[0]
+    except (ValueError, IndexError):
+        raise ValueError(f"Código inválido: {code}")
 
 
+Company_response_enc = LabelEncoder()
+Company_response_enc.fit(pd.DataFrame(['In progress', 'Closed with explanation',
+       'Closed with non-monetary relief', 'Closed',
+       'Closed with monetary relief', 'Untimely response']))
 
+
+def Company_response_decoder(code: int) -> str:
+    """Convierte un código numérico a su nombre de estado"""
+    try:
+        return Company_response_enc.inverse_transform([code])[0]
+    except (ValueError, IndexError):
+        raise ValueError(f"Código inválido: {code}")
 
 Time_enco = LabelEncoder()
 Time_enco.fit(pd.DataFrame(['Yes', 'No']) )
 
+def Timely_decoder(code: int) -> str:
+    """Convierte un código numérico a su nombre de estado"""
+    try:
+        return Time_enco.inverse_transform([code])[0]
+    except (ValueError, IndexError):
+        raise ValueError(f"Código inválido: {code}")
 
 
 companies= open("company_names.txt", "r")
-
 
 Company_enc = LabelEncoder()
 Company_enc.fit(pd.DataFrame(companies.read().split(";")))
@@ -227,18 +279,27 @@ Company_enc.fit(pd.DataFrame(companies.read().split(";")))
 Dispute_enco = LabelEncoder()
 Dispute_enco.fit(pd.DataFrame(["Unknown or not specified", 'Yes', 'No']))
 
+def Dispute_decoder(code: int) -> str:
+    """Convierte un código numérico a su nombre de estado"""
+    try:
+        return Dispute_enco.inverse_transform([code])[0]
+    except (ValueError, IndexError):
+        raise ValueError(f"Código inválido: {code}")
 
 def preprocesing_function_paraforest(df_not: pd.DataFrame) -> pd.DataFrame:
-    """ this function is used to preprocess the data uing label encoding"""
+    """ this function is used to preprocess the data uing label encoding 
+    Company does not need to be encoded because it is not used in the model
+    """
     df=df_not.copy()
     #lo copio
+    df["ZIP code"].fillna(000, inplace=True)
     df["ZIP code"]=df["ZIP code"].astype(np.int64)
     # lo paso a int para el zip code
     df["Issue"].fillna("Unknown or not specified", inplace=True) 
     df["Sub-issue"].fillna("Unknown or not specified", inplace=True)
     df["Sub-product"].fillna("Unknown or not specified", inplace=True)
     df["ZIP code"].fillna(0, inplace=True)
-    df["ZIP code"].fillna(0, inplace=True)
+    
     df["Consumer disputed?"].fillna("Unknown or not specified", inplace=True)
 
     # relleno los valores nulos de las columnas con un valor que no se va a usar
@@ -286,17 +347,16 @@ def preprocesing_function_paraforest(df_not: pd.DataFrame) -> pd.DataFrame:
 
 
 
-    df['Company']=Company_enc.transform(df['Company'])
+
 
 
     df["Consumer disputed?"].fillna("Unknown or not specified", inplace=True)
     df['Consumer disputed?']=Dispute_enco.transform(df['Consumer disputed?'] )
 
+
+    df['Company response']=Company_response_enc.transform(df['Company response'])
     
-    # digo si es mfestivo o no 
-    df["weekday"]=df["Date received"].dt.weekday
-    us_holidays = holidays.US()
-    df["holiday"]= df["Date received"].isin(us_holidays)
+    
 
 
      #devuelve dataframe
