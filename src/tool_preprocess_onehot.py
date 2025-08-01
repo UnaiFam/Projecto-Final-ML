@@ -437,3 +437,16 @@ def preprocesing_function_onehot(df_not: pd.DataFrame) -> pd.DataFrame:
 
      #devuelve dataframe
     return df
+
+
+def encoder_api_onehot(df):
+    df["Product"]=product_encoder.transform(df["Product"])
+    df["Sub-product"]=sub_product_encoder.transform(df["Sub-product"])
+    df["Issue"]=Issue_enc.transform(df["Issue"])
+    df["Sub-issue"]=sub_Issue_enc.transform(df["Sub-issue"])
+    df["State"]=State_enc.transform(df["State"])
+    df["Timely response?"]=Time_enco.transform(df["Timely response?"])
+
+    return df
+
+    

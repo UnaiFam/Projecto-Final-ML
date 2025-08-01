@@ -111,7 +111,7 @@ sub_product_encoder.fit(pd.DataFrame(['Unknown or not specified', 'Medical', 'FH
        'ID prepaid card', "Traveler's/Cashier's checks",
        'Foreign currency exchange', 'Credit repair']))
 
-def product_decoder(code: int) -> str:
+def sub_product_decoder(code: int) -> str:
     """Convierte un código numérico a su nombre de subproducto"""
     try:
         return sub_product_encoder.inverse_transform([code])[0]
@@ -261,6 +261,9 @@ def Company_response_decoder(code: int) -> str:
 Time_enco = LabelEncoder()
 Time_enco.fit(pd.DataFrame(['Yes', 'No']) )
 
+Time_enco0= LabelEncoder()
+Time_enco0.fit(['Yes', 'No'])
+
 def Timely_decoder(code: int) -> str:
     """Convierte un código numérico a su nombre de estado"""
     try:
@@ -278,6 +281,8 @@ Company_enc.fit(pd.DataFrame(companies.read().split(";")))
 
 Dispute_enco = LabelEncoder()
 Dispute_enco.fit(pd.DataFrame(["Unknown or not specified", 'Yes', 'No']))
+Dispute_enco0 = LabelEncoder()
+Dispute_enco0.fit(["Unknown or not specified", 'Yes', 'No'])
 
 def Dispute_decoder(code: int) -> str:
     """Convierte un código numérico a su nombre de estado"""
@@ -361,3 +366,17 @@ def preprocesing_function_paraforest(df_not: pd.DataFrame) -> pd.DataFrame:
 
      #devuelve dataframe
     return df
+
+
+
+def decoder_forest(df):
+    df["Product"]=product_decoder(df["Product"])
+    df["Sub-product"]=sub_product_decoder(df["Sub-product"])
+    df["Issue"]=issue_decoder(df["Issue"])
+    df["Sub-issue"]=product_decoder(df["Sub-issue"])
+    df["State"]=state_decoder(df["State"])
+    df["Company response"]=Company_response_decoder(df["Company response"])
+    df["Timely response?"]=Timely_decoder(df["Timely response?"])
+    
+    return df
+
