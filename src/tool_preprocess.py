@@ -126,7 +126,7 @@ State_enc.fit(pd.DataFrame(['TX', 'MA', 'CA', 'OH', 'NJ', 'ND', 'RI', 'CO', 'UT'
        'NY', 'NC', 'GA', 'IL', 'WI', 'MI', 'FL', 'CT', 'OR', 'VA', 'WA',
        'TN', 'MD', 'IA', 'KY', 'LA', 'OK', 'NE', 'KS', 'MO', 'NH', 'IN',
        'DC', 'NV', 'ME', 'NM', 'SC', 'AZ', 'AP', 'MS', 'MN', 'ID', 'HI',
-       'PR', 'Unknown', 'WV', 'WY', 'AK', 'VI', 'MT', 'DE', 'AR', 'AE',
+       'PR', 'Unknown or not specified', 'WV', 'WY', 'AK', 'VI', 'MT', 'DE', 'AR', 'AE',
        'SD', 'GU', 'VT', 'MH', 'PW', 'AS']) )
 def state_decoder(code: int) -> str:
     """Convierte un código numérico a su nombre de estado"""

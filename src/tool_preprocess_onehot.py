@@ -12,7 +12,8 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import LabelEncoder
 
 # poner los encoder para que seimpre sea el mismo 
-
+def convert_to_str(X):
+    return X.astype(str)
 us_states = {
     "Alabama": "AL",
     "Alaska": "AK",
@@ -77,6 +78,28 @@ def get_zip_info(zip_code: str) -> str:
             return "Unknown"
     except Exception as e:
         return "Unknown"
+
+
+
+
+def state_df_zip(df_not: pd.DataFrame) -> pd.DataFrame:
+    """ 
+    Transform df state
+    """
+    df=df_not.copy()
+    #lo copio
+    df["ZIP code"].fillna(000, inplace=True)
+    df["ZIP code"]=df["ZIP code"].astype(np.int64)
+    null_state_rows = df[df["State"].isnull()]
+    for idx in null_state_rows.index:
+        # miro en cada fila que tiene el estado nulo y saco el zip code
+        zip_code = df.loc[idx, "ZIP code"]
+
+        state = get_zip_info(zip_code)
+        # llamo a la funcion que me devuelve el estado
+        df.loc[idx, "State"] = state
+
+
 
 product_encoder = OneHotEncoder()
 product_encoder.fit(pd.DataFrame(['Debt collection', 'Mortgage', 'Credit card', 'Consumer loan',
@@ -447,6 +470,9 @@ def encoder_api_onehot(df):
     df["State"]=State_enc.transform(df["State"])
     df["Timely response?"]=Time_enco.transform(df["Timely response?"])
 
+
+    df = pd.get_dummies(df, columns=['Product','Sub-product',  'Issue', 'Sub-issue', "Company response", "State"], drop_first=False)
+    df["Timely response?"]=Time_enco.transform(df["Timely response?"])
     return df
 
     
