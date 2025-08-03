@@ -82,7 +82,7 @@ product_encoder = LabelEncoder()
 product_encoder.fit(pd.DataFrame(['Debt collection', 'Mortgage', 'Credit card', 'Consumer loan',
        'Bank account or service', 'Payday loan', 'Credit reporting',
        'Money transfers', 'Student loan', 'Prepaid card',
-       'Other financial service']))
+       'Other financial service', "Unknown or not specified"]))
 
 def product_decoder(code: int) -> str:
     """Convierte un código numérico a su nombre de producto"""
@@ -248,7 +248,7 @@ def subissue_decoder(code: int) -> str:
 Company_response_enc = LabelEncoder()
 Company_response_enc.fit(pd.DataFrame(['In progress', 'Closed with explanation',
        'Closed with non-monetary relief', 'Closed',
-       'Closed with monetary relief', 'Untimely response']))
+       'Closed with monetary relief', 'Untimely response', "Unknown or not specified"]))
 
 
 def Company_response_decoder(code: int) -> str:

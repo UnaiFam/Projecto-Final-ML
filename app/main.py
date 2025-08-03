@@ -3,6 +3,7 @@ from fastapi import FastAPI
 import pandas as pd
 import numpy as np
 import os
+import __main__
 """
 cd Projecto-Final-ML/app
 fastapi dev main.py"""
@@ -11,11 +12,17 @@ fastapi dev main.py"""
     server   Documentation at 
 """
 """ parar ctrl C"""
-
+import sys
 import os
-print(os.getcwd())
-os.chdir("../src")
-from tool_preprocess_onehot import convert_to_str
+
+# Añadir el directorio donde está tool_preprocess_onehot.py
+sys.path.append(os.path.abspath("../src"))  # ajusta según tu estructura
+def convert_to_str(X):
+    return X.astype(str)
+__main__.convert_to_str = convert_to_str
+# Importa la función antes de cargar el modelo
+
+
 
 import pickle
 import joblib
@@ -23,10 +30,10 @@ os.chdir("../models")
 #saco las pipelines /modelos
 
 
-modelo_timely=joblib.load("modelo_timely_tree.pkl")
+modelo_timely=joblib.load("modelo_timely_tree_def.pkl")
 
 import dill
-dill._dill._reverse_typemap['convert_to_str'] = convert_to_str
+
 
 
 with open("modelo_pipe_dispute_knn.pkl", "rb") as f:
@@ -36,7 +43,7 @@ with open("modelo_pipe_dispute_knn.pkl", "rb") as f:
 #necesito esta funcion para que fincione porque no me dejaba exportarlo de otra forma
 
 
-"""modelo_dispute=joblib.load("modelo_pipe_dispute_knn.pkl")"""
+"""modelo_dispute=joblib.load("modelo_pipe_dispute_knn_def.pkl")"""
 
 # Aplicacion
 app=FastAPI()
@@ -93,7 +100,7 @@ def predict_timely (
 
 
 
-@app.get("/predict_dispute{Issue}{Subissue}{Companyresponse}{Product}{Subproduct}{State}{zip}{timely}")
+@app.get("/predict_dispute{Issue}_{Subissue}_{Companyresponse}_{Product}_{Subproduct}_{State}_{zip}")
 def predict_dispute (
     Product: int,
     Subproduct: int,
@@ -134,4 +141,4 @@ def predict_dispute (
     pred=modelo_dispute.predict(features)[0]
     prob=modelo_dispute.predict_proba(features)[0]
 
-    return {"response": pred,"probability":prob }
+    return {"response": pred,"probability":prob.tolist() }

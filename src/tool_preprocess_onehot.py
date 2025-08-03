@@ -14,6 +14,7 @@ from sklearn.preprocessing import LabelEncoder
 # poner los encoder para que seimpre sea el mismo 
 def convert_to_str(X):
     return X.astype(str)
+
 us_states = {
     "Alabama": "AL",
     "Alaska": "AK",
@@ -292,10 +293,9 @@ def Timely_decoder(code: int) -> str:
         raise ValueError(f"Código inválido: {code}")
 
 
-companies= open("company_names.txt", "r")
 
-Company_enc = OneHotEncoder()
-Company_enc.fit(pd.DataFrame(companies.read().split(";")))
+
+
 
 
 
