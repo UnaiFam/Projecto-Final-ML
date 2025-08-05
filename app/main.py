@@ -21,8 +21,9 @@ def convert_to_str(X):
     return X.astype(str)
 __main__.convert_to_str = convert_to_str
 # Importa la función antes de cargar el modelo
+os.chdir("../src")
 
-
+from tool_preprocess import product_encoder,sub_product_encoder, Issue_enc, sub_Issue_enc, State_enc, Company_response_enc
 
 import pickle
 import joblib
@@ -36,7 +37,7 @@ import dill
 
 
 
-with open("modelo_pipe_dispute_knn.pkl", "rb") as f:
+with open("modelo_pipe_dispute_knn_def.pkl", "rb") as f:
     modelo_dispute = dill.load(f)
 
 
@@ -136,7 +137,12 @@ def predict_dispute (
 
 })
     
-
+    features["Product"] = product_encoder.inverse_transform(features["Product"])
+    features["Sub-product"] = sub_product_encoder.inverse_transform(features["Sub-product"])
+    features["Issue"] = Issue_enc.inverse_transform(features["Issue"])
+    features["Sub-issue"] = sub_Issue_enc.inverse_transform(features["Sub-issue"])
+    features["State"] = State_enc.inverse_transform(features["State"])
+    features["Company response"] = Company_response_enc.inverse_transform(features["Company response"])
 
     pred=modelo_dispute.predict(features)[0]
     prob=modelo_dispute.predict_proba(features)[0]
