@@ -3,11 +3,15 @@ from fastapi import FastAPI
 import pandas as pd
 import numpy as np
 import os
+from datetime import datetime
 import __main__
+# a fecha de 2/8/2025 funcionaba el docs generado, nunca he comprobado la API como tal solo los DOCS generas
 """
 cd Projecto-Final-ML/app
-fastapi dev main.py"""
+fastapi dev main.py
 
+"""
+# creo que la "IP" nunca es la misma
 """    server   Server started at 
     server   Documentation at 
 """
@@ -15,15 +19,16 @@ fastapi dev main.py"""
 import sys
 import os
 
-# Añadir el directorio donde está tool_preprocess_onehot.py
+# necesario porque si no explota
 sys.path.append(os.path.abspath("../src"))  # ajusta según tu estructura
 def convert_to_str(X):
     return X.astype(str)
-__main__.convert_to_str = convert_to_str
+__main__.convert_to_str = convert_to_str # basicamente engaña a py para esto sea de de base
+
 # Importa la función antes de cargar el modelo
 os.chdir("../src")
-
-from tool_preprocess import product_encoder,sub_product_encoder, Issue_enc, sub_Issue_enc, State_enc, Company_response_enc
+# los saco porque el modelo dispute necesita decodificarlo
+from tool_preprocess import product_encoder,sub_product_encoder, Issue_enc, sub_Issue_enc, State_enc, Company_response_enc, Company_enc
 
 import pickle
 import joblib
@@ -31,13 +36,13 @@ os.chdir("../models")
 #saco las pipelines /modelos
 
 
-modelo_timely=joblib.load("modelo_timely_tree_def.pkl")
-
+modelo_timely=joblib.load("modelo_pipe_dispute_randomforest_onehot_company_def.pkl")
+# libreria como pickle porque tuve problemas con pickle 
 import dill
 
 
-
-with open("modelo_pipe_dispute_knn_def.pkl", "rb") as f:
+# saco el modelo(ahora el )
+with open("modelo_pipe_dispute_randomforest_onehot_company_def.pkl", "rb") as f:
     modelo_dispute = dill.load(f)
 
 
@@ -57,7 +62,7 @@ async def root():
 @app.get("/items/{item_id}")
 def read_item(item_id: int, q: str | None = None):
     return {"item_id": item_id, "id": q}
-
+# wrapper para que la api haga cosas de api. 
 @app.get("/predict_timely{Issue}_{Subissue}_{Companyresponse}_{Product}_{Subproduct}_{State}")
 def predict_timely (    
 
@@ -69,17 +74,16 @@ def predict_timely (
     Subissue: int = 39,
     State: int = 52):
     
-    #State por defecto Unknown
-    #Subproduct por defecto Unknown or 
-    #Subissue por defecto Unknown or 
-
-    #Product por defecto other financia services
+    #State por defecto Unknown or not specified
+    #Subproduct por defecto Unknown or not specified
+    #Subissue por defecto Unknown or not specified
+    #Product por defecto other financial services
 
     #Yes=1, No= 0
 
 
     
-
+    # cogo los features y los pongo en df
     features=pd.DataFrame(
         {
             "Product":[Product],
@@ -92,36 +96,41 @@ def predict_timely (
 
 }
     )
-    
+    #predigo el df
     pred=modelo_timely.predict(features)[0]
 
-    
+    #debuelve json ( con 1 y 0 porque asi no hay que cambiarlo mas adelante)
     return {"response01": int(pred)}
 
 
+    
 
-
-@app.get("/predict_dispute{Issue}_{Subissue}_{Companyresponse}_{Product}_{Subproduct}_{State}_{zip}")
+@app.get("/predict_dispute{Issue}_{Subissue}_{Companyresponse}_{Product}_{Company}_{Subproduct}_{State}_{zip}_{timely}_{weekday}")
 def predict_dispute (
     Product: int,
     Subproduct: int,
     Issue: int,
     Companyresponse: int,
+    Company:int, 
+    weekday:int,
     timely: int=None,
     Subissue: int = 39,
     State: int = 52, 
-    zip:int=000
+    zip:int=000, 
+    
 ):
     """State por defecto Unknown
     Subissue por defecto Unknown or 
-    Yes=2, No= 0, duda =1"""
+    Yes=2, No= 0, duda =1
     
-    
-    
+    """
+
     if timely is None:
         timely = int(predict_timely(Issue=Issue,Subissue=Subissue , Companyresponse=Companyresponse, Product=Product, Subproduct=Subproduct , State=State )["response01"])
     print(timely)
 
+    
+    
 
     
     features=pd.DataFrame({
@@ -131,9 +140,12 @@ def predict_dispute (
             "Issue":[Issue],	
             "Sub-issue":[Subissue],	
             "State":[State],	
+            "weekday":[weekday],
+            "Company":[Company],
             "Company response":[Companyresponse],
             "Timely response?": [timely],
-            "ZIP code":[zip]
+            "ZIP code":[zip], 
+            
 
 })
     
@@ -141,6 +153,7 @@ def predict_dispute (
     features["Sub-product"] = sub_product_encoder.inverse_transform(features["Sub-product"])
     features["Issue"] = Issue_enc.inverse_transform(features["Issue"])
     features["Sub-issue"] = sub_Issue_enc.inverse_transform(features["Sub-issue"])
+    features["Company"] = Company_enc.inverse_transform(features["Company"])
     features["State"] = State_enc.inverse_transform(features["State"])
     features["Company response"] = Company_response_enc.inverse_transform(features["Company response"])
 

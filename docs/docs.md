@@ -1,5 +1,5 @@
 # DOCUMENTACION
-
+librerias en requirements.txt
 ## Objetivo del proyecto
 
 Se pretende estimar primero la si la respuesta a tiempo (algo que aparentemente fue bastante facil y solo se realizo un modelo) y luego usar este dadot para estimar la si el cliente disputo o no. 
@@ -34,9 +34,8 @@ Tras esto se pretende utilizar ambos modelose introducirlos o en una API de fast
 * **ZIP code**: Hay varias que que no tienen estado pero si postal. Se podria intentar sacar el estado e  ignorar esta variable para evitar problemas de prvaciad. Se usara laber encoder debido a que solo hay unos 60 distintos
 
 * **Date received**	: Fecha que llego
-* **Date sent to company**	:Fecha que llego a la compañia parece que en todos los casos llega y se recibe el mismo dia. Hay menos en fin de semana y no hay festivos.
+* **Date sent to company**	:Fecha que llego a la compañia parece que en todos los casos llega y se recibe el mismo dia. Hay menos en fin de semana y       no    hay festivos.
 Estos datos no son muy utiles a pesar de que se saco en los dias laborales (que son todos) y los dias de retraso(que no tiene ya que los dias no tiene).
-
     * dias de retraso: inutil porque parece que en todos es 0 no se pondra
     * weekday  a lo mejor el dia de la semana tiene importancia       
     * holiday lo  mismo
@@ -65,11 +64,20 @@ Estos datos no son muy utiles a pesar de que se saco en los dias laborales (que 
 
 
 ## Modelos de timely response?
+En el nb de entrenamiento intentara sacar el estado si no tiene el a pesar de que el modelo no lo use como tal.
 
 Para el modelo se elimianron la columna de compañia, y la respuesta de compañia in progress, Complaint ID,  Consumer disputed?, ZIP code,Date received, Date sent to company. No se metio feature engineering.
 Se metio resampleo con ADASYN.
 El modelo es un decision tree al que se optimizo con grid search buscando maxima accuracy. 
+El modelo NO TIENE PRERPROCESADO. Es necesario alimentarle directamente los ID. consultar los ID
 
+
+* Issue: 
+* Companyresponse: 
+* Product: 
+* Subproduct:
+* Subissue: 
+* State:
 
 
 Se metio: criterion='entropy', max_depth=30, random_state=24.
@@ -111,24 +119,84 @@ Este modelo tiene dos problemas:
 
 
 esta el modelo esta en models y se llama modelo_timely_tree_def.pkl .
-## Modelo de timely response
+## Modelo de Company Response
+Esto modelo se esta intentando que guardarlo como pipeline pero tengo problemas de guardado por lo que es necesario 
+
+
+<code>
+sys.path.append(os.path.abspath("../src"))  
+
+import __main__
+
+
+
+def convert_to_str(X):
+    return X.astype(str)
+__main__.convert_to_str = convert_to_str
+
+
+
+os.chdir("../src")´
+<code>
+
+Por algun problema que tuve con formato pickle  ponerlo en la pipeline y es necesario engañar a python de que es una funcion base y no custom.
+
+Todos estos se ha intentado seguir el mismo formato en forma de pipeline para que solo haya que llamarlo (y que no pase como con timely)
+
+
+Se han intentado varios modelos entre ellos SVC, KNN, XBClassifier, gradient boost (conmpañia) (redes neuronales a pesar de que la pipelineno consigo integrarla). Pero sin feature engineering no dan un ninguno da un accuracy que llegue ni al 60%, y suelen rondar algo por encima del 50 %(mejor que tirar una moneda al aire). 
+
+Despues se intento meter compañia y el dia de la semana y con random forest. Parece que ha mejordo ligeramente  ya que 
+
+
+| Clase                  | Precisión | Recall | F1-Score | Soporte |
+|------------------------|-----------|--------|----------|---------|
+| 0                      | 0.29      | 0.55   | 0.38     | 1045    |
+| 1                      | 0.83      | 0.62   | 0.71     | 3760    |
+| **Accuracy Total**     |           |        | **0.60** | 4805    |
+| **Promedio Macro**     | 0.56      | 0.58   | 0.54     | 4805    |
+| **Promedio Ponderado** | 0.71      | 0.60   | 0.64     | 4805    |
+
+
+Confusion Matrix:
+
+
+| Clase Verdadera \ Predicha | 0       | 1       |
+|----------------------------|---------|---------|
+| 0                          | 0.5493  | 0.4507  |
+| 1                          | 0.3819  | 0.6181  |
+
+
+Apenas es mejor que una moneda pero a fecha de 6/8 es el mejor mdelo
+
+
 
 
 ## API
-
+Archivo main.py en carpeta app 
 Se monto una API con tres funciones:
 * Una funcion de prueba que que funciona la API
 * Una funcion que llama el modelo de timely
-A p
 * Una funcion que llama el modelo de company response:
-     tiene la opcion de meter manualmente timely se si se conoce pero si llamara el modelo timely.
+    * tiene la opcion de meter manualmente timely se si se conoce pero si llamara el modelo timely.
 
-Utiliza fast API para esto
 
-PAra utilizar API en necesario consultar la documentacion de la API especifica. pero en resumen hay que introducr la numeros correspondientes de los label encoders del tool preprocess en src.
+
+Utiliza fast API,  solo corre en la maquina que lo ejecute, y realmente todo esto sobra ya que las apps ya tienen opcion de integracion de API. 
+
+Todos ellos cogen ID directamente por lo que es necesario codificar las variables antes de usarlo. Esto resulta mas comodo para el uso de la API que poner el valor completo
+PAra utilizar API en necesario consultar la documentacion de la API especifica. Pero en resumen hay que introducr la numeros correspondientes de los label encoders del tool preprocess en src. consultar el ID.md.
+
+Para activar la API activar el entorno virtual y activar terminal y meter fastapi dev main.py.
+
 
 ## APPS de gradio
-
+en la carpeta de app
 Se hiciero dos apps uno para cada modelo.
-Estas apps tienen precticamente el mismo front end. con u scroll con todas los opciones.
-Por debajo utiliza lo mismo que la API pero codifican con los encoders
+Estas apps tienen precticamente el mismo front end. con un scroll con todas los opciones categoricas y con 
+Por debajo utiliza lo mismo que la API pero tienen condificarla por debajo ya que timely no lo hace de base y el modelo de company response depende de este. Solo en la de timely.
+
+Tuve muchos problemas con gradio ya que gradio asigna las variables en orden de aparicion sin importar el nombre. Afortunadamente pude solucionarlo  y se puede meter valores por defecto.
+
+
+
