@@ -89,17 +89,10 @@ def state_df_zip(df_not: pd.DataFrame) -> pd.DataFrame:
     """
     df=df_not.copy()
     #lo copio
-    df["ZIP code"].fillna(000, inplace=True)
-    df["ZIP code"]=df["ZIP code"].astype(np.int64)
-    null_state_rows = df[df["State"].isnull()]
-    for idx in null_state_rows.index:
-        # miro en cada fila que tiene el estado nulo y saco el zip code
-        zip_code = df.loc[idx, "ZIP code"]
-
+    for idx in df[df["State"].isnull()].index:
+        zip_code = df.at[idx, "ZIP code"]
         state = get_zip_info(zip_code)
-        # llamo a la funcion que me devuelve el estado
-        df.loc[idx, "State"] = state
-
+        df.at[idx, "State"] = state
 
 
 product_encoder = OneHotEncoder()

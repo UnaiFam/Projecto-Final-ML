@@ -21,19 +21,30 @@ Tras esto se pretende utilizar ambos modelose introducirlos o en una API de fast
     * Money transfers            
     * Prepaid card               
     * Other financial service 
-    Se añade la etiqueta "Unknown or not speficied"    
+    Se añade la etiqueta "Unknown or not speficied"   para los datos faltantes 
      
-* **Sub-product**: DEstro de un producto la parte concreta. La mayoria esta vacia. Solo los 'Debt collection', 'Mortgage', 'Consumer loan',
-       'Bank account or service', 'Money transfers', 'Student loan',
-       'Prepaid card', 'Other financial servicetienen subproductos. "Debt collection" tambien tiene alguna queja en la que no tiene subproducto.
-       Se añade la etiqueta "Unlnow or not speficied"  
- El resto to tiene subproducto.(Ver celda de mas abajo)
-* **Issue**	: Hay 90 categorias Auque creo que alguna esta repetida (mirar mas abajo para detalles)
-* **Sub-issue**	:Solo 'Debt collection', 'Credit reporting' tienen esto y hay 47 distintas (mirar mas abajo para detalles). El resto es una categoria vacia. Se rellenara con una etiquta 
-* **State**	: Son los 50 estados de EEUU, otros territorios controlados por el(	Puerto Rico, Islas Vírgenes, Guam, Samoa Americana, Islas Marshall, Palaos ) y dos designagiones militares (AE es europea, y AP del pacifico). Hay valores faltantes. Algunos de estos si que tienen codigo Zip.  Se va a ñadir el estado unknown y se intentara sacarSe usara label encoder debido a que solo hay unos 60 distintos
-* **ZIP code**: Hay varias que que no tienen estado pero si postal. Se podria intentar sacar el estado e  ignorar esta variable para evitar problemas de prvaciad. Se usara laber encoder debido a que solo hay unos 60 distintos
+* **Sub-product**: DEstro de un producto la parte concreta. La mayoria esta vacia. Solo los :
+    * 'Debt collection', 
+    * 'Mortgage', 
+    * 'Consumer loan',
+    * 'Bank account or service', 
+      'Money transfers', 
+    * 'Student loan',
+    * 'Prepaid card', 
+    * 'Other financial service 
+    tienen subproductos. "Debt collection" tambien tiene alguna queja en la que no tiene subproducto.
+    Se añade la etiqueta "Unknown or not speficied"   para los datos faltantes  
+ El resto no tiene subproducto.Para mas info consulat categorias.md
 
-* **Date received**	: Fecha que llego
+* **Issue**	: Hay 90 categorias Aunque creo que alguna esta repetida (mirar mas abajo para detalles)
+
+* **Sub-issue**	:Solo 'Debt collection', 'Credit reporting' tienen esto y hay 47 distintas (mirar mas abajo para detalles). El resto es una categoria vacia. 
+Se rellenara con una etiqueta "Unknown or not specified", para la facilidad de uso. Para mas info consulat categorias.md
+
+* **State**	: Son los 50 estados de EEUU, otros territorios controlados por el(	Puerto Rico, Islas Vírgenes, Guam, Samoa Americana, Islas Marshall, Palaos ) y dos designagiones militares (AE es europea, y AP del pacifico). Hay valores faltantes. Algunos de estos si que tienen codigo Zip y se sacara El zip
+* **ZIP code**: Hay varias que que no tienen estado pero si postal. Se puede intentar sacar el estado e  ignorar esta variable para evitar problemas de prvaciad. Pero viendo que los modelos de dispute 
+
+* **Date received**	: Entre 2015-01-01 hata 2015-03-15
 * **Date sent to company**	:Fecha que llego a la compañia parece que en todos los casos llega y se recibe el mismo dia. Hay menos en fin de semana y       no    hay festivos.
 Estos datos no son muy utiles a pesar de que se saco en los dias laborales (que son todos) y los dias de retraso(que no tiene ya que los dias no tiene).
     * dias de retraso: inutil porque parece que en todos es 0 no se pondra
@@ -50,9 +61,13 @@ Estos datos no son muy utiles a pesar de que se saco en los dias laborales (que 
     * 'Closed'
     * 'Closed with monetary relief'
     * 'Untimely response'
-    Un label encoder es adecuado. Esta b¡muy desbalanceado con 'Closed with explanation' siendo el mas frecuente
+    Esta muy desbalanceado con 'Closed with explanation' siendo el mas frecuente. Sin embargo dependiendo del modelo onehot  es mu
+
 * **Timely response?**: Solo contiene Si y no. Pero solo hay como 700 quejas que no se han respondido a tiempo.  P.D.  timely tiene cramer de 0.732  on esto lo que aloemtos.
+
 * **Consumer disputed?**:estan si , no, y nan. Desbalanceado. La inmensa mayoria es NaN. las que estan in progress tiene sentido ( posiblemente se rellene con la categoria in progress) pero en el resto no se sabe como intrepretarlo.
+Esto se debe muy probablemente segun a la muy problable base de [datos original](https://cfpb.github.io/api/ccdb/fields.htmhttps://cfpb.github.io/api/ccdb/fields.html) descontinuo estavariable en 2017 (aunque los datos son de 2015)
+Consgui encontrar la api original al parecer esta variable se descontiuno el en 2017 pero no 
 
 ---
 * La disputa del consumidor parece presionar a las empresas a dar explicaciones más detalladas, aunque no necesariamente mejora la probabilidad de recibir un alivio.
@@ -61,7 +76,7 @@ Estos datos no son muy utiles a pesar de que se saco en los dias laborales (que 
 
 
 
-
+incidente :tras una semana trabajanod me he dado cuenta que la funcion de zip cunaod se llama po py elimina todos los estado por lo que todos los modelos que estado haciendo son inutiles excepto los timely
 
 ## Modelos de timely response?
 En el nb de entrenamiento intentara sacar el estado si no tiene el a pesar de que el modelo no lo use como tal.
@@ -113,12 +128,16 @@ Se considero el modelo como suficiente ya que este no es el modelo principal, y 
 | 2  | Issue            | 0.0805      |
 
 Este modelo tiene dos problemas:
-
-* Realmente este modelo "hace trampas" ya que el factor mas importante es company response. Company respone dice si esta cerrado o si a tenido timely response asi que en cierta manera el modelo ya tiene el target incorporado
+* este modelo se le elimino la company response in progress
+* Realmente este modelo "hace trampas" ya que el factor mas importante es company response. Company respone dice si esta cerrado o si a tenido timely response asi que en cierta manera el modelo ya tiene el target incorporado. Incluso eliminando el untimely response sigue predicioento basste bien (acc0,93, f1 0,930) 
 * La mera existendia de Company response como feature no tiene sentido fisico ya que para cuando la empresa sepa como responder no tiene importancia.
 
 
 esta el modelo esta en models y se llama modelo_timely_tree_def.pkl .
+
+Aun asi eliminaro untimely response sigue siendo un buen modelo y metodo. No me centrare en este modelo intentare optimizar el otro.
+Otro problema de este modelo del modelo es la falta de preprocesado
+
 ## Modelo de Company Response
 Esto modelo se esta intentando que guardarlo como pipeline pero tengo problemas de guardado por lo que es necesario 
 
@@ -143,8 +162,8 @@ Por algun problema que tuve con formato pickle  ponerlo en la pipeline y es nece
 
 Todos estos se ha intentado seguir el mismo formato en forma de pipeline para que solo haya que llamarlo (y que no pase como con timely)
 
-
-Se han intentado varios modelos entre ellos SVC, KNN, XBClassifier, gradient boost (conmpañia) (redes neuronales a pesar de que la pipelineno consigo integrarla). Pero sin feature engineering no dan un ninguno da un accuracy que llegue ni al 60%, y suelen rondar algo por encima del 50 %(mejor que tirar una moneda al aire). 
+SE utilizara onehot encoders
+Se han intentado varios modelos entre ellos SVC, KNN, XBClassifier, gradient boost , clustering y (redes neuronales a pesar de que la pipelineno consigo integrarla). Pero sin feature engineering no dan un ninguno da un accuracy que llegue ni al 60%, y suelen rondar algo por encima del 50 %(mejor que tirar una moneda al aire) o solo predicen un valor para todos los casos. Por lo que no se va hablar de estos modelos.
 
 Despues se intento meter compañia y el dia de la semana y con random forest. Parece que ha mejordo ligeramente  ya que 
 
@@ -169,10 +188,16 @@ Confusion Matrix:
 
 Apenas es mejor que una moneda pero a fecha de 6/8 es el mejor mdelo
 
+Mire que se si se unen  issue y subsisser parece que reduce el tiempo de entrenamiento ya quey en un onehot encoder no hace falta codificar los issues (a pesar de que luego se vaya a olvidar esto cuando lo necesito urgentemente) pero no se hasta que punto es fiable
 
+Me sospecho que lo que limita los modelos son la falta de datos (solo 6000 utiles) y de variables relacionadas ()
+
+el dia 7/8/2025 decidi inventarme datos sacar 30000 datos con un gan y probar con un random forest onehot teniendo en cuenta que en su momento tardo 40 min en optimizares posible que utilize otro modelo. (Tras 6 min tiene un f1 0,68, muchisimo mejor que todo hasta ahora) (50 min y va por 0,72 pero solo 20 puebas)
 
 
 ## API
+La API la realice antes de las apps. 
+Ambas implementaciones las hice antes de tener los modelos definivos, mas como una prueba de concepto solo tener que cambiar el modelo definivo cuando este listo.
 Archivo main.py en carpeta app 
 Se monto una API con tres funciones:
 * Una funcion de prueba que que funciona la API
@@ -182,18 +207,19 @@ Se monto una API con tres funciones:
 
 
 
-Utiliza fast API,  solo corre en la maquina que lo ejecute, y realmente todo esto sobra ya que las apps ya tienen opcion de integracion de API. 
+Utiliza fast API, y solo corre en la maquina que lo ejecute, y realmente todo esto sobra ya que las apps ya tienen opcion de integracion de API. 
 
 Todos ellos cogen ID directamente por lo que es necesario codificar las variables antes de usarlo. Esto resulta mas comodo para el uso de la API que poner el valor completo
 PAra utilizar API en necesario consultar la documentacion de la API especifica. Pero en resumen hay que introducr la numeros correspondientes de los label encoders del tool preprocess en src. consultar el ID.md.
+El modelo de dispute necesita decodificarlo por debajo porque tiene una pipeline integrada y utliza onehot encoding lo que obliga
 
 Para activar la API activar el entorno virtual y activar terminal y meter fastapi dev main.py.
 
 
 ## APPS de gradio
 en la carpeta de app
-Se hiciero dos apps uno para cada modelo.
-Estas apps tienen precticamente el mismo front end. con un scroll con todas los opciones categoricas y con 
+Se hiciero dos apps (uno pata timely response y otro para el otro)uno para cada modelo.
+Estas apps tienen precticamente el mismo front end. con un scroll con todas los opciones categoricas (sacadas de los encoder de la carpeta src) y con 
 Por debajo utiliza lo mismo que la API pero tienen condificarla por debajo ya que timely no lo hace de base y el modelo de company response depende de este. Solo en la de timely.
 
 Tuve muchos problemas con gradio ya que gradio asigna las variables en orden de aparicion sin importar el nombre. Afortunadamente pude solucionarlo  y se puede meter valores por defecto.

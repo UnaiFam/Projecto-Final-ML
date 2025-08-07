@@ -77,6 +77,27 @@ def get_zip_info(zip_code: str) -> str:
             return "Unknown"
     except Exception as e:
         return "Unknown"
+def convert_to_str(X):
+    return X.astype(str)
+
+
+def state_df_zip(df_not: pd.DataFrame) -> pd.DataFrame:
+    """ 
+    Transform df state
+    """
+    df=df_not.copy()
+    #lo copio
+    df["ZIP code"].fillna(000, inplace=True)
+    df["ZIP code"]=df["ZIP code"].astype(np.int64)
+    null_state_rows = df[df["State"].isnull()]
+    for idx in null_state_rows.index:
+        # miro en cada fila que tiene el estado nulo y saco el zip code
+        zip_code = df.loc[idx, "ZIP code"]
+
+        state = get_zip_info(zip_code)
+        # llamo a la funcion que me devuelve el estado
+        df.loc[idx, "State"] = state
+
 
 product_encoder = LabelEncoder()
 product_encoder.fit(pd.DataFrame(['Debt collection', 'Mortgage', 'Credit card', 'Consumer loan',
@@ -311,17 +332,14 @@ def preprocesing_function_paraforest(df_not: pd.DataFrame) -> pd.DataFrame:
     null_state_rows = df[df["State"].isnull()]
     # saco las filas que tienen el estado nulo
 
-    for idx in null_state_rows.index:
-        # miro en cada fila que tiene el estado nulo y saco el zip code
-        zip_code = df.loc[idx, "ZIP code"]
-
+    for idx in df[df["State"].isnull()].index:
+        zip_code = df.at[idx, "ZIP code"]
         state = get_zip_info(zip_code)
-        # llamo a la funcion que me devuelve el estado
-        df.loc[idx, "State"] = state
+        df.at[idx, "State"] = state
 
         # cambio el tipo para sacar otras cosas por si acaso
-    df["Date received"] = pd.to_datetime(df["Date received"], format="%Y-%m-%d")
-    df["Date sent to company"] = pd.to_datetime(df["Date received"], format="%Y-%m-%d")
+        df["Date received"] = pd.to_datetime(df["Date received"], format="%Y-%m-%d")
+        df["Date sent to company"] = pd.to_datetime(df["Date received"], format="%Y-%m-%d")
 
 #codificadrores
 # pordoductos lleno los huevcos con not specified y luego lo codifico
