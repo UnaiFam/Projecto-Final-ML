@@ -36,7 +36,7 @@ os.chdir("../models")
 #saco las pipelines /modelos
 
 
-modelo_timely=joblib.load("modelo_pipe_dispute_randomforest_onehot_company_def.pkl")
+modelo_timely=joblib.load("modelo_timely_tree_def.pkl")
 # libreria como pickle porque tuve problemas con pickle 
 import dill
 

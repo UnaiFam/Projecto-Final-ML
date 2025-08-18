@@ -66,8 +66,12 @@ Estos datos no son muy utiles a pesar de que se saco en los dias laborales (que 
 * **Timely response?**: Solo contiene Si y no. Pero solo hay como 700 quejas que no se han respondido a tiempo.  P.D.  timely tiene cramer de 0.732  on esto lo que aloemtos.
 
 * **Consumer disputed?**:estan si , no, y nan. Desbalanceado. La inmensa mayoria es NaN. las que estan in progress tiene sentido ( posiblemente se rellene con la categoria in progress) pero en el resto no se sabe como intrepretarlo.
-Esto se debe muy probablemente segun a la muy problable base de [datos original](https://cfpb.github.io/api/ccdb/fields.htmhttps://cfpb.github.io/api/ccdb/fields.html) descontinuo estavariable en 2017 (aunque los datos son de 2015)
-Consgui encontrar la api original al parecer esta variable se descontiuno el en 2017 pero no 
+Esto se debe muy probablemente segun a la muy problable base de [datos original](https://cfpb.github.io/api/ccdb/fields.htmhttps://cfpb.github.io/api/ccdb/fields.html) descontinuo estavariable en 2017 (aunque los datos son de 2015). 
+Consgui encontrar la api original aunque dice que esta variable se desocntinuo en 2017, posiblemente porque no se rellena.
+
+---
+
+Parece para la mayoria de variables no hay una diferencia de poblacion segun comsumer response quitando las fechas, aunque esto seguramente se deba a que aun no se ha confirmado que el consumidor vaya a disputar.
 
 ---
 * La disputa del consumidor parece presionar a las empresas a dar explicaciones más detalladas, aunque no necesariamente mejora la probabilidad de recibir un alivio.
