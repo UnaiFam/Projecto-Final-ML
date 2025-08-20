@@ -214,7 +214,7 @@ Issue_enc.fit(pd.DataFrame(['Communication tactics', "Cont'd attempts collect de
        'Advertising, marketing or disclosures', 'Excessive fees']) )
 
 def issue_decoder(code: int) -> str:
-    """Convierte un código numérico a su nombre de estado"""
+    """Convierte un código numérico a su nombre de issue"""
     try:
         return Issue_enc.inverse_transform([code])[0]
     except (ValueError, IndexError):
@@ -259,7 +259,7 @@ sub_Issue_enc.fit(pd.DataFrame(['Frequent or repeated calls', 'Debt is not mine'
        'Received marketing offer after opted out']) )
 
 def subissue_decoder(code: int) -> str:
-    """Convierte un código numérico a su nombre de estado"""
+    """Convierte un código numérico a su nombre de subissue"""
     try:
         return sub_Issue_enc.inverse_transform([code])[0]
     except (ValueError, IndexError):
@@ -273,7 +273,7 @@ Company_response_enc.fit(pd.DataFrame(['In progress', 'Closed with explanation',
 
 
 def Company_response_decoder(code: int) -> str:
-    """Convierte un código numérico a su nombre de estado"""
+    """Convierte un código numérico a su nombre de respuesta"""
     try:
         return Company_response_enc.inverse_transform([code])[0]
     except (ValueError, IndexError):
@@ -286,7 +286,7 @@ Time_enco0= LabelEncoder()
 Time_enco0.fit(['Yes', 'No'])
 
 def Timely_decoder(code: int) -> str:
-    """Convierte un código numérico a su nombre de estado"""
+    """Convierte un código numérico a su nombre de timely"""
     try:
         return Time_enco.inverse_transform([code])[0]
     except (ValueError, IndexError):
@@ -306,11 +306,16 @@ Dispute_enco0 = LabelEncoder()
 Dispute_enco0.fit(["Unknown or not specified", 'Yes', 'No'])
 
 def Dispute_decoder(code: int) -> str:
-    """Convierte un código numérico a su nombre de estado"""
+    """Convierte un código numérico a su nombre de disputa"""
     try:
         return Dispute_enco.inverse_transform([code])[0]
     except (ValueError, IndexError):
         raise ValueError(f"Código inválido: {code}")
+    
+
+
+week_enc=LabelEncoder()
+week_enc.fit(pd.DataFrame(["Monday"  ,"Tuesday",  "Wednesday"  ,"Thursday" , "Friday","Saturday" , "Sunday"]))
 
 def preprocesing_function_paraforest(df_not: pd.DataFrame) -> pd.DataFrame:
     """ this function is used to preprocess the data uing label encoding 
