@@ -2,7 +2,7 @@
 librerias en requirements.txt
 ## Objetivo del proyecto
 
-Se pretende estimar primero la si la respuesta a tiempo (algo que aparentemente fue bastante facil y solo se realizo un modelo) y luego usar este dadot para estimar la si el cliente disputo o no. 
+Se pretende estimar primero la si la respuesta a tiempo (algo que aparentemente fue bastante facil y solo se realizo un modelo) y luego usar este dato para estimar la si el cliente disputo o no. 
 Tras esto se pretende utilizar ambos modelose introducirlos o en una API de fast api o en una app de gradio (aunque finalmente e han hecho 2 una para cada modelo porque no se me ocurrio como meterlo en el mismo). 
 
 
@@ -80,7 +80,21 @@ Parece para la mayoria de variables no hay una diferencia de poblacion segun com
 
 
 
-incidente :tras una semana trabajanod me he dado cuenta que la funcion de zip cunaod se llama po py elimina todos los estado por lo que todos los modelos que estado haciendo son inutiles excepto los timely
+incidente :tras una semana trabajanod me he dado cuenta que la funcion de zip cunaod se llama po py elimina todos los estado por lo que todos los modelos que estado haciendo son inutiles excepto los timely. Esto me ha dado la idea limpiar los datos en limpieza copy.ipynb y guardalo como csv
+
+## Feature engineerig y limpieza de los datos
+Limpiador.ipynb 
+* Para los casos en los que se tenia el ZIP code pero no el estado de procedencia se ha utilizado la API (zippotam)[https://api.zippopotam/] para buscar el ZIP. El estado se paso a las iniciales y se queda en el dataframe.
+
+* Para los zip vacios se relleno con el codigo Zip 0
+* Para los estados desconocidos se relleno con la etiqueta Unknown
+* Para el el resto de variables se relleno con la etiqueta Unknown or not specified
+
+Para feature engineering se las fechas se sacaron 3 variables adicionales:
+* dias de retraso (que no se uso porque en todos los casos es 0, y no se acabo usando)
+* weekday (En forma de texto)
+* holiday (si es dia de fiesta o no. No se acabo usando porque todos son laborables )
+
 
 ## Modelos de timely response?
 En el nb de entrenamiento intentara sacar el estado si no tiene el a pesar de que el modelo no lo use como tal.
@@ -91,12 +105,6 @@ El modelo es un decision tree al que se optimizo con grid search buscando maxima
 El modelo NO TIENE PRERPROCESADO. Es necesario alimentarle directamente los ID. consultar los ID
 
 
-* Issue: 
-* Companyresponse: 
-* Product: 
-* Subproduct:
-* Subissue: 
-* State:
 
 
 Se metio: criterion='entropy', max_depth=30, random_state=24.
@@ -118,7 +126,7 @@ Se metio: criterion='entropy', max_depth=30, random_state=24.
 
 0.9315 acuraccy medio
 
-Se considero el modelo como suficiente ya que este no es el modelo principal, y se urilizara el metodo los siguientes modelos. Si que se intento utilizar un modelo SVC pero no pudo terminar tras una 2 h de procesamiento.
+Se considero el modelo como suficiente ya que este no es el modelo principal
 
 
 
@@ -131,16 +139,46 @@ Se considero el modelo como suficiente ya que este no es el modelo principal, y 
 | 1  | Sub-product      | 0.1096      |
 | 2  | Issue            | 0.0805      |
 
-Este modelo tiene dos problemas:
-* este modelo se le elimino la company response in progress
-* Realmente este modelo "hace trampas" ya que el factor mas importante es company response. Company respone dice si esta cerrado o si a tenido timely response asi que en cierta manera el modelo ya tiene el target incorporado. Incluso eliminando el untimely response sigue predicioento basste bien (acc0,93, f1 0,930) 
-* La mera existendia de Company response como feature no tiene sentido fisico ya que para cuando la empresa sepa como responder no tiene importancia.
+Este modelo tiene tres problemas:
+* Realmente este modelo "hace trampas" ya que el factor mas importante es company response. Company respone dice si esta cerrado o si a tenido timely response asi que en cierta manera el modelo ya tiene el target incorporado. ) 
+La mera existendia de Company response como feature no tiene sentido fisico ya que para cuando la empresa sepa como responder no tiene importancia. aunuqe se elimine y se reentrene . 
+
+* es bastante posible que este sobreajustado, y ademas es algo dificil de interpretar ()
+Asi que vamos a eliminar el company responnse (03_Entrenamiento_Evaluacion forest timely sin company res.ipynb)
+
+Para sin company response:
+| Clase | Precision | Recall | F1-Score | Support |
+|-------|-----------|--------|----------|---------|
+| **No**  | 0.90      | 0.94   | 0.92     | 4971    |
+| **Yes** | 0.93      | 0.89   | 0.91     | 4942    |
+
+**Accuracy total:** 0.91 (sobre 9913 muestras)  
+**Macro avg:** Precision = 0.92 · Recall = 0.91 · F1 = 0.91  
+**Weighted avg:** Precision = 0.92 · Recall = 0.91 · F1 = 0.91  
+
+Matriz de Confusión
+
+|               | Predicho No | Predicho Yes |
+|---------------|-------------|--------------|
+| **Real No**   | 0.9364      | 0.0636       |
+| **Real Yes**  | 0.1079      | 0.8921       |
+
+||Feature  Importance|
+|---------------|-------------|
+|      Product    |0.250131|
+|        State   | 0.238749|
+|  Sub-product  |  0.224037|
+|    Sub-issue |   0.159057|
+|        Issue|    0.128025|
 
 
-esta el modelo esta en models y se llama modelo_timely_tree_def.pkl .
+No hay tanta diferencia asi que no es como si todo el modelo dependa de esa variable. 
+Sigue teniendo el posible problema de sobreajuste y interpretabilidad
 
-Aun asi eliminaro untimely response sigue siendo un buen modelo y metodo. No me centrare en este modelo intentare optimizar el otro.
-Otro problema de este modelo del modelo es la falta de preprocesado
+
+
+
+
 
 ## Modelo de Company Response
 Esto modelo se esta intentando que guardarlo como pipeline pero tengo problemas de guardado por lo que es necesario 
@@ -194,9 +232,54 @@ Apenas es mejor que una moneda pero a fecha de 6/8 es el mejor mdelo
 
 Mire que se si se unen  issue y subsisser parece que reduce el tiempo de entrenamiento ya quey en un onehot encoder no hace falta codificar los issues (a pesar de que luego se vaya a olvidar esto cuando lo necesito urgentemente) pero no se hasta que punto es fiable
 
-Me sospecho que lo que limita los modelos son la falta de datos (solo 6000 utiles) y de variables relacionadas ()
+Me sospecho que lo que limita los modelos son la falta de datos (solo 6000 utiles) y de variables relacionadas (Ninguna de las variables tienen una diferencia poblacional clara para consumer disputed).
+SE necesitan mas datos y mas features.
 
-el dia 7/8/2025 decidi inventarme datos sacar 30000 datos con un gan y probar con un random forest onehot teniendo en cuenta que en su momento tardo 40 min en optimizares posible que utilize otro modelo. (Tras 6 min tiene un f1 0,68, muchisimo mejor que todo hasta ahora) (50 min y va por 0,72 pero solo 20 puebas)
+Se ha intentado generar mas datos segun las pruebas:
+* CTGANSynthesizer 78%
+* GaussianCopulaSynthesizer 90%
+* TVAESynthesizer 79,33%
+* CopulaGANSynthesizer 78.74%
+
+GaussianCopulaSynthesizer en teoria es el mas similar aunque el CTGANSynthesizer hace que los modelos aprendan identifcar 1 de los dos
+---
+### **Modelo definitivo red neuronal**
+
+Finalmete uso una red neuronal que prioriza accuracy y AUC-ROC. (Red neuronal_def.ipynb en carpeta notebook dispute y y el modelo_dispute_red.keras utiliza el preprocesado preprocesador_red.pkl")
+
+He tenido que guardar el preprocesador y el modelo por separado porque no conseguia meterlo todo en una pipeline
+He usado un oversapler adasyn, ya que parece que mejora los estadisticos ligeramente frente a smote(0,85 vs 0,82 de accuracy)
+
+Las variabbles que se han usado son:
+* Product
+* Sub-product
+* Issue
+* Sub-issue
+* State
+* Company response
+* Timely response?
+* weekday
+* Company
+
+Las variables tienen un preprocesado onehot (preprocesador_red.pkl en src)
+
+500 epoch, batch 64 validation split
+early stopping 20
+ReduceLROnPlateau
+tarda 24 s en entrenar
+
+
+0.8708108108108108
+Accuracy: 0.8708108108108108
+Precision: 0.8580183861082737
+Recall: 0.8936170212765957
+F1: 0.8754559666492965
+AUC-ROC: 0.8704348842646715
+
+rray([[0.84725275, 0.15274725],
+       [0.10638298, 0.89361702]])
+
+corte 0,23 para la maximo
 
 
 ## API
