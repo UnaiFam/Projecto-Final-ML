@@ -107,7 +107,9 @@ El modelo NO TIENE PRERPROCESADO. Es necesario alimentarle directamente los ID. 
 
 
 
-Se metio: criterion='entropy', max_depth=30, random_state=24.
+Se metio: 
+
+DecisionTreeClassifier(criterion='entropy', max_depth=30, min_samples_leaf=1)
 
 
 | Clase                  | Precisión | Recall | F1-Score | Soporte |
@@ -140,42 +142,76 @@ Se considero el modelo como suficiente ya que este no es el modelo principal
 | 2  | Issue            | 0.0805      |
 
 Este modelo tiene tres problemas:
-* Realmente este modelo "hace trampas" ya que el factor mas importante es company response. Company respone dice si esta cerrado o si a tenido timely response asi que en cierta manera el modelo ya tiene el target incorporado. ) 
+* Realmente este modelo "hace trampas" ya que el factor mas importante es company response. Company respone dice si esta cerrado o si a tenido timely response asi que en cierta manera el modelo ya tiene el target incorporado.  
 La mera existendia de Company response como feature no tiene sentido fisico ya que para cuando la empresa sepa como responder no tiene importancia. aunuqe se elimine y se reentrene . 
 
 * es bastante posible que este sobreajustado, y ademas es algo dificil de interpretar ()
 Asi que vamos a eliminar el company responnse (03_Entrenamiento_Evaluacion forest timely sin company res.ipynb)
 
+Se podria utilizar uotro modelo para el company response pero no por falta de tiempo y datos no se va considerar-
+
+
+
 Para sin company response:
-| Clase | Precision | Recall | F1-Score | Support |
+| Metric   | Value    |
+|----------|----------|
+| Accuracy | 0.8922   |
+| AUC-ROC  | 0.8918   |
+
+| Class | Precision | Recall | F1-Score | Support |
 |-------|-----------|--------|----------|---------|
-| **No**  | 0.90      | 0.94   | 0.92     | 4971    |
-| **Yes** | 0.93      | 0.89   | 0.91     | 4942    |
+| No    | 0.86      | 0.94   | 0.90     | 4990    |
+| Yes   | 0.93      | 0.84   | 0.89     | 4923    |
 
-**Accuracy total:** 0.91 (sobre 9913 muestras)  
-**Macro avg:** Precision = 0.92 · Recall = 0.91 · F1 = 0.91  
-**Weighted avg:** Precision = 0.92 · Recall = 0.91 · F1 = 0.91  
+| Average Type  | Precision | Recall | F1-Score | Support |
+|---------------|-----------|--------|----------|---------|
+| Macro Avg     | 0.90      | 0.89   | 0.89     | 9913    |
+| Weighted Avg  | 0.90      | 0.89   | 0.89     | 9913    |
 
-Matriz de Confusión
+| Confusion Matrix | Predicted No | Predicted Yes |
+|-----------------|--------------|---------------|
+| Actual No       | 0.9407       | 0.0593        |
+| Actual Yes      | 0.1570       | 0.8430        |
 
-|               | Predicho No | Predicho Yes |
-|---------------|-------------|--------------|
-| **Real No**   | 0.9364      | 0.0636       |
-| **Real Yes**  | 0.1079      | 0.8921       |
-
-||Feature  Importance|
-|---------------|-------------|
-|      Product    |0.250131|
-|        State   | 0.238749|
-|  Sub-product  |  0.224037|
-|    Sub-issue |   0.159057|
-|        Issue|    0.128025|
+|| Feature  Importance
+|-----------------|--------------|
+|Sub-product   | 0.241308|
+|      Product   | 0.236710|
+|        State   | 0.218347|
+|        Issue   | 0.157413|
+|    Sub-issue  |  0.146222|
 
 
 No hay tanta diferencia asi que no es como si todo el modelo dependa de esa variable. 
 Sigue teniendo el posible problema de sobreajuste y interpretabilidad
+optimizado por auc-roc (equilibiro) (mas general que accuracy aunque no deberia d¡importar tanto con un oversamples)
+guardado como modelo modelo_timely_rf_sin_company.pkl 
+{'criterion': 'entropy', 'max_depth': 25, 'min_samples_leaf': 15}
+
+ligeramente mejor (roc acue de .90 vs 0.89) que un arbol normal aunque mas lento, se pierde mas interpretablidad, y es masmas sobreajustado por lo que no se usara (aun asi las apps v3 usan el modelo)
+
+| Metric        | Value             |
+|---------------|-----------------|
+| Accuracy      | 0.9056          |
+| AUC-ROC       | 0.9054          |
+
+| Class | Precision | Recall | F1-Score | Support |
+|-------|-----------|--------|----------|---------|
+| No    | 0.89      | 0.93   | 0.91     | 4990    |
+| Yes   | 0.92      | 0.88   | 0.90     | 4923    |
+
+| Average Type  | Precision | Recall | F1-Score | Support |
+|---------------|-----------|--------|----------|---------|
+| Macro Avg     | 0.91      | 0.91   | 0.91     | 9913    |
+| Weighted Avg  | 0.91      | 0.91   | 0.91     | 9913    |
 
 
+       Feature  Importance
+1  Sub-product    0.235141
+0      Product    0.204629
+4        State    0.203752
+3    Sub-issue    0.191250
+2        Issue    0.165228
 
 
 
@@ -241,8 +277,10 @@ Se ha intentado generar mas datos segun las pruebas:
 * TVAESynthesizer 79,33%
 * CopulaGANSynthesizer 78.74%
 
-GaussianCopulaSynthesizer en teoria es el mas similar aunque el CTGANSynthesizer hace que los modelos aprendan identifcar 1 de los dos
+GaussianCopulaSynthesizer en teoria es el mas similar aunque el CTGANSynthesizer hace que los modelos aprendan identifcar 1 de los dos pero no parece que haga mucho
+
 ---
+
 ### **Modelo definitivo red neuronal**
 
 Finalmete uso una red neuronal que prioriza accuracy y AUC-ROC. (Red neuronal_def.ipynb en carpeta notebook dispute y y el modelo_dispute_red.keras utiliza el preprocesado preprocesador_red.pkl")
@@ -264,28 +302,39 @@ Las variabbles que se han usado son:
 Las variables tienen un preprocesado onehot (preprocesador_red.pkl en src)
 
 500 epoch, batch 64 validation split
+
+* input
+* hidden layer x4 256, 128, 64 32
+    * relu l2 0,001
+    * batch normalizaion
+    * dropoutr
+* Salida sigmoidea
 early stopping 20
 ReduceLROnPlateau
 tarda 24 s en entrenar
 
+se m¡puede mejorar usando otras arquitecturas
+Dificil de interpretar por muchas features
 
-0.8708108108108108
-Accuracy: 0.8708108108108108
-Precision: 0.8580183861082737
-Recall: 0.8936170212765957
-F1: 0.8754559666492965
-AUC-ROC: 0.8704348842646715
+## APPS de gradio
+en la carpeta de app se usaran las v2 
+Se hiciero dos apps (uno pata timely response y otro para el otro)uno para cada modelo.
+Estas apps tienen precticamente el mismo front end. con un scroll con todas los opciones categoricas (sacadas de los encoder de la carpeta src)
 
-rray([[0.84725275, 0.15274725],
-       [0.10638298, 0.89361702]])
+Por debajo pasan a df
+* Timely pasa todo a label y predidce de alli
+* dispute soporta el texto con el preprocesador ademas devuelve la probabilidad y
+Por debajo utiliza lo mismo que la API pero tienen condificarla por debajo ya que timely no lo hace de base y el modelo de company response depende de este. Solo en la de timely.
 
-corte 0,23 para la maximo
-
+Tuve muchos problemas con gradio ya que gradio asigna las variables en orden de aparicion sin importar el nombre. Afortunadamente pude solucionarlo  y se puede meter valores por defecto.
 
 ## API
-La API la realice antes de las apps. 
+La API la realice antes de las primeras apps. 
+Desfasada las APPS de gradio son mas faciles de usar y cumplen la misma funcion.
+el nb de api son pruebas para comprobar el buen funcionamiento de las funciones de forma mas sencilla, pero no es el entorno 1:1 porque en el archivo main da errores distintos
 Ambas implementaciones las hice antes de tener los modelos definivos, mas como una prueba de concepto solo tener que cambiar el modelo definivo cuando este listo.
-Archivo main.py en carpeta app 
+Por dificultades se la API esta desfasda con modelos antiguos
+Archivo main_copy.py en carpeta app 
 Se monto una API con tres funciones:
 * Una funcion de prueba que que funciona la API
 * Una funcion que llama el modelo de timely
@@ -300,16 +349,11 @@ Todos ellos cogen ID directamente por lo que es necesario codificar las variable
 PAra utilizar API en necesario consultar la documentacion de la API especifica. Pero en resumen hay que introducr la numeros correspondientes de los label encoders del tool preprocess en src. consultar el ID.md.
 El modelo de dispute necesita decodificarlo por debajo porque tiene una pipeline integrada y utliza onehot encoding lo que obliga
 
-Para activar la API activar el entorno virtual y activar terminal y meter fastapi dev main.py.
+Para activar la API activar el entorno virtual y activar terminal y meter fastapi dev main_copy.py.
+
+Se va ha dejar de soportar el 22/8/2025 por falta de tiempo si se quiere API gradio lo soporta
 
 
-## APPS de gradio
-en la carpeta de app
-Se hiciero dos apps (uno pata timely response y otro para el otro)uno para cada modelo.
-Estas apps tienen precticamente el mismo front end. con un scroll con todas los opciones categoricas (sacadas de los encoder de la carpeta src) y con 
-Por debajo utiliza lo mismo que la API pero tienen condificarla por debajo ya que timely no lo hace de base y el modelo de company response depende de este. Solo en la de timely.
-
-Tuve muchos problemas con gradio ya que gradio asigna las variables en orden de aparicion sin importar el nombre. Afortunadamente pude solucionarlo  y se puede meter valores por defecto.
 
 
 

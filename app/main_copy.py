@@ -165,7 +165,7 @@ def predict_dispute (Product:int,
     features_pro=preprocesador.transform(features)
     pred=modelo_dispute.predict(features_pro)[0]
     # me da problemas en la api para json
-    if pred>=0.23:
+    if pred>=0.235:
         return {"response": "Yes"}
     else: 
         return {"response": "No"}
