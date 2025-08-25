@@ -8,6 +8,7 @@ Tras esto se pretende utilizar ambos modelose introducirlos o en una API de fast
 
 ## Fuente de Datos y resumen de EDA
  en carpeta data
+ En ocasiones se añade una etiquta aunque no haga falta
 * **Complaint ID**: ID de la queja
 * **Product**:	Producto al que hace referencia la queja. Hay 11 productos en total. No esta equilibrado. 
     * Debt collection            
@@ -22,7 +23,7 @@ Tras esto se pretende utilizar ambos modelose introducirlos o en una API de fast
     * Prepaid card               
     * Other financial service 
     Se añade la etiqueta "Unknown or not speficied"   para los datos faltantes 
-     
+    Muy relacionado con subproducto
 * **Sub-product**: DEstro de un producto la parte concreta. La mayoria esta vacia. Solo los :
     * 'Debt collection', 
     * 'Mortgage', 
@@ -34,22 +35,26 @@ Tras esto se pretende utilizar ambos modelose introducirlos o en una API de fast
     * 'Other financial service 
     tienen subproductos. "Debt collection" tambien tiene alguna queja en la que no tiene subproducto.
     Se añade la etiqueta "Unknown or not speficied"   para los datos faltantes  
- El resto no tiene subproducto.Para mas info consulat categorias.md
+    El resto no tiene subproducto.Para mas info consulat categorias.md
 
-* **Issue**	: Hay 90 categorias Aunque creo que alguna esta repetida (mirar mas abajo para detalles)
+* **Issue**	: Hay 90 categorias Aunque creo que algunas son muy similares. Aun asi para evitar problemas no se va a tocar. Se añade la etiqueta "Unknown or not speficied"   para los datos faltantes
 
 * **Sub-issue**	:Solo 'Debt collection', 'Credit reporting' tienen esto y hay 47 distintas (mirar mas abajo para detalles). El resto es una categoria vacia. 
 Se rellenara con una etiqueta "Unknown or not specified", para la facilidad de uso. Para mas info consulat categorias.md
 
-* **State**	: Son los 50 estados de EEUU, otros territorios controlados por el(	Puerto Rico, Islas Vírgenes, Guam, Samoa Americana, Islas Marshall, Palaos ) y dos designagiones militares (AE es europea, y AP del pacifico). Hay valores faltantes. Algunos de estos si que tienen codigo Zip y se sacara El zip
+* **State**	: Son los 50 estados de EEUU,  otros territorios controlados por el(	Puerto Rico, Islas Vírgenes, Guam, Samoa Americana, Islas Marshall, Palaos ) y dos designagiones militares (AE Armed Forces Europe, y AP Armed Forces Pacific). Hay valores faltantes.Se intentara rellenar con el 
+
 * **ZIP code**: Hay varias que que no tienen estado pero si postal. Se puede intentar sacar el estado e  ignorar esta variable para evitar problemas de prvaciad. Pero viendo que los modelos de dispute 
 
-* **Date received**	: Entre 2015-01-01 hata 2015-03-15
-* **Date sent to company**	:Fecha que llego a la compañia parece que en todos los casos llega y se recibe el mismo dia. Hay menos en fin de semana y       no    hay festivos.
-Estos datos no son muy utiles a pesar de que se saco en los dias laborales (que son todos) y los dias de retraso(que no tiene ya que los dias no tiene).
+* **Date received**	: Entre 2015-01-01 hasta 2015-03-15
+* **Date sent to company**	:Fecha que llego a la compañia parece que en todos los casos llega y se recibe el mismo dia.
+     Hay menos en fin de semana y       no    hay festivos.
+
+    Estos datos no son muy utiles a pesar de que se saco en los dias laborales (que son todos) y los dias de retraso(que no tiene ya que los dias no tiene).
+
     * dias de retraso: inutil porque parece que en todos es 0 no se pondra
-    * weekday  a lo mejor el dia de la semana tiene importancia       
-    * holiday lo  mismo
+    * weekday:  dia de la semana los fines de smana hay menos qujas       
+    * holiday: todos los dias son laborables y el siguiente tambien al parecer
 
 * **Company**:hay como 1500 y siemmpre hay. No parece importante. Ya que coeficiente de cramer para Consumer disputed? es de 0,188. los cual no es muy alto, sobre todo si tinemos en cuenta que hay 1500 que darian problemas para codificarlos en one hot. P.D.  timely tiene cramer de 0.732  on esto lo que aloemtos. Al mejors
 
@@ -65,9 +70,9 @@ Estos datos no son muy utiles a pesar de que se saco en los dias laborales (que 
 
 * **Timely response?**: Solo contiene Si y no. Pero solo hay como 700 quejas que no se han respondido a tiempo.  P.D.  timely tiene cramer de 0.732  on esto lo que aloemtos.
 
-* **Consumer disputed?**:estan si , no, y nan. Desbalanceado. La inmensa mayoria es NaN. las que estan in progress tiene sentido ( posiblemente se rellene con la categoria in progress) pero en el resto no se sabe como intrepretarlo.
+* **Consumer disputed?**:estan si , no, y nan. Muy desbalanceado. La inmensa mayoria es NaN. las que estan in progress tiene sentido ( posiblemente se rellene con la categoria in progress) pero en el resto no se sabe como intrepretarlo.
 Esto se debe muy probablemente segun a la muy problable base de [datos original](https://cfpb.github.io/api/ccdb/fields.htmhttps://cfpb.github.io/api/ccdb/fields.html) descontinuo estavariable en 2017 (aunque los datos son de 2015). 
-Consgui encontrar la api original aunque dice que esta variable se desocntinuo en 2017, posiblemente porque no se rellena.
+Nan se sintepreta como no informacion y se eliminara cuando haga falta
 
 ---
 
@@ -95,13 +100,16 @@ Para feature engineering se las fechas se sacaron 3 variables adicionales:
 * weekday (En forma de texto)
 * holiday (si es dia de fiesta o no. No se acabo usando porque todos son laborables )
 
+Tammbie se eliminaros los casos con company response in progres o untimley respone porque es un dato sobrante o inconlcuso.
+
 
 ## Modelos de timely response?
 En el nb de entrenamiento intentara sacar el estado si no tiene el a pesar de que el modelo no lo use como tal.
 
 Para el modelo se elimianron la columna de compañia, y la respuesta de compañia in progress, Complaint ID,  Consumer disputed?, ZIP code,Date received, Date sent to company. No se metio feature engineering.
 Se metio resampleo con ADASYN.
-El modelo es un decision tree al que se optimizo con grid search buscando maxima accuracy. 
+El primero se miro cp
+El modelo es un decision tree al que se optimizo con grid search buscando maxima accuracy . 
 El modelo NO TIENE PRERPROCESADO. Es necesario alimentarle directamente los ID. consultar los ID
 
 
@@ -145,10 +153,10 @@ Este modelo tiene tres problemas:
 * Realmente este modelo "hace trampas" ya que el factor mas importante es company response. Company respone dice si esta cerrado o si a tenido timely response asi que en cierta manera el modelo ya tiene el target incorporado.  
 La mera existendia de Company response como feature no tiene sentido fisico ya que para cuando la empresa sepa como responder no tiene importancia. aunuqe se elimine y se reentrene . 
 
-* es bastante posible que este sobreajustado, y ademas es algo dificil de interpretar ()
+* Esta algo sobreajustado (por alta profundidad) (normall en los tree), y ademas es algo dificil de interpretar ()
 Asi que vamos a eliminar el company responnse (03_Entrenamiento_Evaluacion forest timely sin company res.ipynb)
 
-Se podria utilizar uotro modelo para el company response pero no por falta de tiempo y datos no se va considerar-
+Se utilizara  modelo sin el company response 
 
 
 
@@ -182,8 +190,9 @@ Para sin company response:
 |    Sub-issue  |  0.146222|
 
 
-No hay tanta diferencia asi que no es como si todo el modelo dependa de esa variable. 
-Sigue teniendo el posible problema de sobreajuste y interpretabilidad
+No hay tanta diferencia asi que no es como si todo el modelo dependa de esa variable. Ademas se cambi el  'min_samples_leaf' de 15 a 30 en vez de1 15 aun asi intentara dar el minimo ( mejora el acuraccy pero aumenta el riesgo de sobreajuste)
+
+Sigue no t (cv score 0.9  o asi y no hay mucha std) y interpretabilidad
 optimizado por auc-roc (equilibiro) (mas general que accuracy aunque no deberia d¡importar tanto con un oversamples)
 guardado como modelo modelo_timely_rf_sin_company.pkl 
 {'criterion': 'entropy', 'max_depth': 25, 'min_samples_leaf': 15}
@@ -317,7 +326,11 @@ se m¡puede mejorar usando otras arquitecturas
 Dificil de interpretar por muchas features
 
 ## APPS de gradio
-en la carpeta de app se usaran las v2 
+en la carpeta de app se usaran las v4
+* v1 prototipo
+* v2 prototipo con modelos mas avanzados (basicamente v3 con los modelos que se usaron en v4)
+* v3 prototipo con otros modelos que no se acabarosn usando
+* v4 mejora de json, ahora da mas info
 Se hiciero dos apps (uno pata timely response y otro para el otro)uno para cada modelo.
 Estas apps tienen precticamente el mismo front end. con un scroll con todas los opciones categoricas (sacadas de los encoder de la carpeta src)
 
@@ -326,30 +339,45 @@ Por debajo pasan a df
 * dispute soporta el texto con el preprocesador ademas devuelve la probabilidad y
 Por debajo utiliza lo mismo que la API pero tienen condificarla por debajo ya que timely no lo hace de base y el modelo de company response depende de este. Solo en la de timely.
 
+
 Tuve muchos problemas con gradio ya que gradio asigna las variables en orden de aparicion sin importar el nombre. Afortunadamente pude solucionarlo  y se puede meter valores por defecto.
+Si no se da timely response lo predice y da los reslutado
+    Devuelve:
+        "response":Yes/No
+        "response01": 1/0
+        "prob": %
+        timely:
+            "response":Yes/No
+            "response01": 1/0
+            "prob": %
+
+
 
 ## API
 La API la realice antes de las primeras apps. 
-Desfasada las APPS de gradio son mas faciles de usar y cumplen la misma funcion.
+
 el nb de api son pruebas para comprobar el buen funcionamiento de las funciones de forma mas sencilla, pero no es el entorno 1:1 porque en el archivo main da errores distintos
 Ambas implementaciones las hice antes de tener los modelos definivos, mas como una prueba de concepto solo tener que cambiar el modelo definivo cuando este listo.
-Por dificultades se la API esta desfasda con modelos antiguos
-Archivo main_copy.py en carpeta app 
+
+Archivo main.py en carpeta app 
 Se monto una API con tres funciones:
 * Una funcion de prueba que que funciona la API
 * Una funcion que llama el modelo de timely
 * Una funcion que llama el modelo de company response:
-    * tiene la opcion de meter manualmente timely se si se conoce pero si llamara el modelo timely.
+    * tiene la opcion de meter manualmente timely se si no se conoce pero si llamara el modelo timely y lo calculara.
+Las predicciones devuelven
+* response: Yes/No
+* response01: 1/0
+* prob: %
 
-
-
+El threshol para la decision es de 0.5.
 Utiliza fast API, y solo corre en la maquina que lo ejecute, y realmente todo esto sobra ya que las apps ya tienen opcion de integracion de API. 
 
 Todos ellos cogen ID directamente por lo que es necesario codificar las variables antes de usarlo. Esto resulta mas comodo para el uso de la API que poner el valor completo
 PAra utilizar API en necesario consultar la documentacion de la API especifica. Pero en resumen hay que introducr la numeros correspondientes de los label encoders del tool preprocess en src. consultar el ID.md.
 El modelo de dispute necesita decodificarlo por debajo porque tiene una pipeline integrada y utliza onehot encoding lo que obliga
 
-Para activar la API activar el entorno virtual y activar terminal y meter fastapi dev main_copy.py.
+Para activar la API activar el entorno virtual y activar terminal y meter fastapi dev main.py.
 
 Se va ha dejar de soportar el 22/8/2025 por falta de tiempo si se quiere API gradio lo soporta
 

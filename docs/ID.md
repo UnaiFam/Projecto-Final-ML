@@ -273,7 +273,7 @@
 | TN    | 49 | Tennessee                        |
 | TX    | 50 | Texas                            |
 | UT    | 51 | Utah                             |
-| Unknown or not specified | 52 | Unknown or not specified        |
+|Unknown or not specified| 52 | Unknown or not specified        |
 | VA    | 53 | Virginia                         |
 | VI    | 54 | Virgin Islands                   |
 | VT    | 55 | Vermont                          |

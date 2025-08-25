@@ -18,7 +18,7 @@ y abrir carpeta
 
 
 cd Projecto-Final-ML/app
-fastapi dev main_copy.py
+fastapi dev main.py
 
 """
 # creo que la "IP" nunca es la misma
@@ -45,7 +45,7 @@ os.chdir("../models")
 #saco las pipelines /modelos
 
 
-modelo_timely=joblib.load("modelo_timely_tree_def.pkl")
+modelo_timely=joblib.load("modelo_timely_tree_sin_comp.pkl")
 # libreria como pickle porque tuve problemas con pickle 
 import dill
 
@@ -72,26 +72,35 @@ async def root():
 def read_item(item_id: int, q: str | None = None):
     return {"item_id": item_id, "id": q}
 # wrapper para que la api haga cosas de api. 
-@app.get("/predict_timely{Issue}_{Subissue}_{Companyresponse}_{Product}_{Subproduct}_{State}")
-def predict_timely (    
+@app.get("/predict_timely{Issue}_{Subissue}_{Product}_{Subproduct}_{State}")
 
-    
-    Issue: int,
-    Companyresponse: int,
+
+def predict_timely (    
+    Issue: int=86,
     Product: int=7,
     Subproduct: int=39,
     Subissue: int = 39,
     State: int = 52):
     
-    #State por defecto Unknown or not specified
-    #Subproduct por defecto Unknown or not specified
-    #Subissue por defecto Unknown or not specified
-    #Product por defecto other financial services
+    """
+    Los codigos numericos estan en docs ID.md, en IDipynb y tambien en los encoder en la carpeta src tool_preprocess.py
+    calcula el si se respondera a tiempo 
+    Thershold de yes/no 0.5
+    Valores por defecto:
+    Product: Other financial service
+    Subproduct Unknown or not specified 
+    Issue: Unknown or not specified
+    Subissue Unknown or not specified
+    State Unknown or not specified
 
-    #Yes=1, No= 0
-
-
+    Devuelve             
+    "response":Yes/No
+            "response01": 1/0
+            "prob": %
     
+    """
+
+
     # cogo los features y los pongo en df
     features=pd.DataFrame(
         {
@@ -100,43 +109,64 @@ def predict_timely (
             "Issue":[Issue],	
             "Sub-issue":[Subissue],	
             "State":[State],	
-            "Company response":[Companyresponse],
-            
-
-}
+        }
     )
     #predigo el df
-    pred=modelo_timely.predict(features)[0]
 
-    #debuelve json ( con 1 y 0 porque asi no hay que cambiarlo mas adelante)
-    return {"response01": int(pred)}
+    pred=(float(modelo_timely.predict_proba(features)[:,1])>=0.5)
+    prob= float(modelo_timely.predict_proba(features)[:,1])
+
+    # paso para yes no
+    if int(pred)==1:
+        response="Yes"
+    else:
+        response="No"
+
+    return {"response01": int(pred), "timeprob":prob, "response":response
+            }
 
 
     
 
 @app.get("/predict_dispute{Product}_{Subproduct}_{Issue}_{Subissue}_{State}_{Company}_{Companyresponse}_{timely}_{weekday}")
-def predict_dispute (Product:int, 
-    Subproduct:int, 
+def predict_dispute (
+    timely,
     Issue:int, 
-    Subissue:int, 
-    State:int,
     Company:int,
     Companyresponse:int, 
-    timely:int, 
-    weekday:int
+    weekday:int,
+    Product: int=7,
+    Subproduct:int=39,
+    Subissue:int=39, 
+    State:int=52,
     ):
 
+    """    
+    Los codigos numericos estan en docs ID.md, en IDipynb y tambien en los encoder en la carpeta src tool_preprocess.py
+    Funcion que predice si el cliente disputara o no.
+
+    Product: Other financial service
+    Subproduct: Unknown or not specified 
+    Issue: Unknown or not specified
+    Subissue: Unknown or not specified
+    State: Unknown or not specified
+    timely: response None
+    
+    Thershold de yes/no 0.5
+    Si timely response es none lo predice y da los reslutado
+    Devuelve:
+        "response":Yes/No
+        "response01": 1/0
+        "prob": %
+    Si timely response es none lo predice pero no devolvera los resultados, para consultarlos hacerlo por separado
+    
     """
-    Devuelve 'Yes' y 'No' de si el cliente disputa 
-    Si no se sabe si la respuesta es a tiempo la estima
 
-    cutoff 0.23
-
-    """
-
-    if timely is None:
-        timely = int(predict_timely(Issue=Issue,Subissue=Subissue , Companyresponse=Companyresponse, Product=Product, Subproduct=Subproduct , State=State )["response01"])
-    print(timely)
+    if timely == None:
+        timely_res = (predict_timely(Issue=Issue,Subissue=Subissue , Product=Product, Subproduct=Subproduct , State=State ))
+        timely=timely_res["response"]
+    else:
+        timely_res='Not calculated'
 
     
     features=pd.DataFrame({
@@ -151,7 +181,7 @@ def predict_dispute (Product:int,
             "Company response":[Companyresponse],
             "Timely response?": [timely]})
     
-    features["Timely response?"] = features["Timely response?"].replace({1: "Yes", 0: "No"})
+    features["Timely response?"].replace([1,0], ["Yes", "No"], inplace=True)
     
     features["Product"] = product_encoder.inverse_transform(pd.DataFrame(features["Product"]))
     features["Sub-product"] = sub_product_encoder.inverse_transform(pd.DataFrame(features["Sub-product"]))
@@ -163,9 +193,12 @@ def predict_dispute (Product:int,
     features["weekday"]=week_enc.inverse_transform(pd.DataFrame(features["weekday"]))
 
     features_pro=preprocesador.transform(features)
-    pred=modelo_dispute.predict(features_pro)[0]
-    # me da problemas en la api para json
-    if pred>=0.235:
-        return {"response": "Yes"}
-    else: 
-        return {"response": "No"}
+
+    pred=(modelo_dispute.predict(features_pro) >= 0.5).astype(int)
+    if pred== 1:
+        res="Yes"
+    else :
+        res="No"
+    prob=modelo_dispute.predict(features_pro)
+
+    return {"response":res, "response01": int(pred), "prob": float(prob), "timely":timely_res}
