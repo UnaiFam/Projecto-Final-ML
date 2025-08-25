@@ -2,7 +2,7 @@
 librerias en requirements.txt
 ## Objetivo del proyecto
 
-Se pretende estimar primero la si la respuesta a tiempo (algo que aparentemente fue bastante facil y solo se realizo un modelo) y luego usar este dato para estimar la si el cliente disputo o no. 
+Se pretende estimar primero la si la respuesta a tiempo (algo que aparentemente fue bastante facil) y luego usar este dato para estimar la si el cliente disputo o no. 
 Tras esto se pretende utilizar ambos modelose introducirlos o en una API de fast api o en una app de gradio (aunque finalmente e han hecho 2 una para cada modelo porque no se me ocurrio como meterlo en el mismo). 
 
 
@@ -286,7 +286,7 @@ Se ha intentado generar mas datos segun las pruebas:
 * TVAESynthesizer 79,33%
 * CopulaGANSynthesizer 78.74%
 
-GaussianCopulaSynthesizer en teoria es el mas similar aunque el CTGANSynthesizer hace que los modelos aprendan identifcar 1 de los dos pero no parece que haga mucho
+GaussianCopulaSynthesizer en teoria es el mas similar aunque el CTGANSynthesizer hace que los modelos aprendan identifcar solo 1 de los dos. Esto no es la solucion de mi problema.
 
 ---
 
@@ -385,3 +385,7 @@ Se va ha dejar de soportar el 22/8/2025 por falta de tiempo si se quiere API gra
 
 
 
+## Cosas que hacer en el futuro
+
+encontrar umbral
+predecir company respone? (no haria esto para casos reales)
