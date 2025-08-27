@@ -45,20 +45,20 @@ os.chdir("../models")
 #saco las pipelines /modelos
 
 
-modelo_timely=joblib.load("modelo_timely_tree_sin_comp.pkl")
+modelo_timely=joblib.load("modelo_timely_tree_sin_comp_def.pkl")
 # libreria como pickle porque tuve problemas con pickle 
 import dill
 
 
 # saco el modelo dispute
 from tensorflow import keras
-modelo_dispute = keras.models.load_model("modelo_dispute_red.keras")
+modelo_dispute = keras.models.load_model("modelo_dispute_red_def.keras")
 
 
 #necesito esta funcion para que fincione porque no me dejaba exportarlo de otra forma
 
 
-"""modelo_dispute=joblib.load("modelo_pipe_dispute_knn_def.pkl")"""
+
 
 # Aplicacion
 app=FastAPI()
