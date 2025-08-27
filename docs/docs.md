@@ -52,11 +52,11 @@ Se rellenara con una etiqueta "Unknown or not specified", para la facilidad de u
 
     Estos datos no son muy utiles a pesar de que se saco en los dias laborales (que son todos) y los dias de retraso(que no tiene ya que los dias no tiene).
 
-    * dias de retraso: inutil porque parece que en todos es 0 no se pondra
-    * weekday:  dia de la semana los fines de smana hay menos qujas       
+    * dias de retraso: no parece que ayude demasiado
+    * weekday:  dia de la semana los fines de smana hay menos qujas   en la que se recivio la queja      
     * holiday: todos los dias son laborables y el siguiente tambien al parecer
 
-* **Company**:hay como 1500 y siemmpre hay. No parece importante. Ya que coeficiente de cramer para Consumer disputed? es de 0,188. los cual no es muy alto, sobre todo si tinemos en cuenta que hay 1500 que darian problemas para codificarlos en one hot. P.D.  timely tiene cramer de 0.732  on esto lo que aloemtos. Al mejors
+* **Company**:hay como 1500 y siemmpre hay. No parece importante. Muy relacioado con products. Aunque es una variable de alta cardinalidad se usara en one-hot encoding, ya que las redes neuronales funcionan mejor con 1 y 0
 
 
 * **Company response**:	Siempre tiene y son:
@@ -68,7 +68,7 @@ Se rellenara con una etiqueta "Unknown or not specified", para la facilidad de u
     * 'Untimely response'
     Esta muy desbalanceado con 'Closed with explanation' siendo el mas frecuente. Sin embargo dependiendo del modelo onehot  es mu
 
-* **Timely response?**: Solo contiene Si y no. Pero solo hay como 700 quejas que no se han respondido a tiempo.  P.D.  timely tiene cramer de 0.732  on esto lo que aloemtos.
+* **Timely response?**: Solo contiene Si y no. Pero solo hay como 700 quejas que no se han respondido a tiempo.  P.D.  timely tiene cramer de 0.732 
 
 * **Consumer disputed?**:estan si , no, y nan. Muy desbalanceado. La inmensa mayoria es NaN. las que estan in progress tiene sentido ( posiblemente se rellene con la categoria in progress) pero en el resto no se sabe como intrepretarlo.
 Esto se debe muy probablemente segun a la muy problable base de [datos original](https://cfpb.github.io/api/ccdb/fields.htmhttps://cfpb.github.io/api/ccdb/fields.html) descontinuo estavariable en 2017 (aunque los datos son de 2015). 
