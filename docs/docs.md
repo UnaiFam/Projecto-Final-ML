@@ -1,5 +1,7 @@
 # DOCUMENTACION
-librerias en requirements.txt
+librerias en requirements.txt o en el yaml
+Se uso  python 3.12.11
+
 ## Objetivo del proyecto
 
 Se pretende estimar primero la si la respuesta a tiempo (algo que aparentemente fue bastante facil) y luego usar este dato para estimar la si el cliente disputo o no. 
@@ -7,6 +9,7 @@ Tras esto se pretende utilizar ambos modelose introducirlos o en una API de fast
 
 
 ## Fuente de Datos y resumen de EDA
+
  en carpeta data
  En ocasiones se añade una etiquta aunque no haga falta
 * **Complaint ID**: ID de la queja
@@ -24,6 +27,7 @@ Tras esto se pretende utilizar ambos modelose introducirlos o en una API de fast
     * Other financial service 
     Se añade la etiqueta "Unknown or not speficied"   para los datos faltantes 
     Muy relacionado con subproducto
+
 * **Sub-product**: DEstro de un producto la parte concreta. La mayoria esta vacia. Solo los :
     * 'Debt collection', 
     * 'Mortgage', 
@@ -44,19 +48,23 @@ Se rellenara con una etiqueta "Unknown or not specified", para la facilidad de u
 
 * **State**	: Son los 50 estados de EEUU,  otros territorios controlados por el(	Puerto Rico, Islas Vírgenes, Guam, Samoa Americana, Islas Marshall, Palaos ) y dos designagiones militares (AE Armed Forces Europe, y AP Armed Forces Pacific). Hay valores faltantes.Se intentara rellenar con el 
 
-* **ZIP code**: Hay varias que que no tienen estado pero si postal. Se puede intentar sacar el estado e  ignorar esta variable para evitar problemas de prvaciad. Pero viendo que los modelos de dispute 
+* **ZIP code**: Hay varias que que no tienen estado pero si postal. Se puede intentar sacar el estado e  ignorar esta variable para evitar problemas de prvaciad. Pero viendo que los modelos de dispute. Por privacidad, y porque es una categoria numerica de alta cardinalidad no se utilizara. Ademas la informacion estaria incluida en State.
 
 * **Date received**	: Entre 2015-01-01 hasta 2015-03-15
+
 * **Date sent to company**	:Fecha que llego a la compañia parece que en todos los casos llega y se recibe el mismo dia.
      Hay menos en fin de semana y       no    hay festivos.
 
     Estos datos no son muy utiles a pesar de que se saco en los dias laborales (que son todos) y los dias de retraso(que no tiene ya que los dias no tiene).
 
-    * dias de retraso: no parece que ayude demasiado
-    * weekday:  dia de la semana los fines de smana hay menos qujas   en la que se recivio la queja      
-    * holiday: todos los dias son laborables y el siguiente tambien al parecer
+    * *dias de retraso:* no parece que ayude demasiado en el modelo de dispute( lo emperora)
+        La mayoria son 0, aunque hay una minroa que tarda mas en recibirse, y una menor que tarda aun mas. es la unica variable numerica. No parece que se relacione los casos qeu se recive el mismo dia sean timely response.
+
+    * *weekday:*  dia de la semana los fines de smana hay menos quejas   en la que se recibio la queja      
+    * *holiday:* todos los dias son laborables y el siguiente tambien al parecer
 
 * **Company**:hay como 1500 y siemmpre hay. No parece importante. Muy relacioado con products. Aunque es una variable de alta cardinalidad se usara en one-hot encoding, ya que las redes neuronales funcionan mejor con 1 y 0
+No se usara en timely para evitar mala publicidad de las empresas( aunque parece que no lo necesita) y porque el modelo de timely es un arbol, y funciona mejor con label encoders.
 
 
 * **Company response**:	Siempre tiene y son:
@@ -84,15 +92,15 @@ Parece para la mayoria de variables no hay una diferencia de poblacion segun com
 * En cambio, cuando el consumidor no disputa, es más común que haya habido alguna forma de compensación (sobre todo no monetaria).
 
 
-
-incidente :tras una semana trabajanod me he dado cuenta que la funcion de zip cunaod se llama po py elimina todos los estado por lo que todos los modelos que estado haciendo son inutiles excepto los timely. Esto me ha dado la idea limpiar los datos en limpieza copy.ipynb y guardalo como csv
+Incidente :tras una semana trabajanod me he dado cuenta que la funcion de zip cunaod se llama po py elimina todos los estado por lo que todos los modelos que estado haciendo son inutiles excepto los timely. Esto me ha dado la idea limpiar los datos en limpieza copy.ipynb y guardalo como csv.
 
 ## Feature engineerig y limpieza de los datos
-Limpiador.ipynb 
+
+en Limpiador.ipynb 
 * Para los casos en los que se tenia el ZIP code pero no el estado de procedencia se ha utilizado la API (zippotam)[https://api.zippopotam/] para buscar el ZIP. El estado se paso a las iniciales y se queda en el dataframe.
 
 * Para los zip vacios se relleno con el codigo Zip 0
-* Para los estados desconocidos se relleno con la etiqueta Unknown
+* Para los estados desconocidos se relleno con la etiqueta Unknown or not specified
 * Para el el resto de variables se relleno con la etiqueta Unknown or not specified
 
 Para feature engineering se las fechas se sacaron 3 variables adicionales:
@@ -100,19 +108,21 @@ Para feature engineering se las fechas se sacaron 3 variables adicionales:
 * weekday (En forma de texto)
 * holiday (si es dia de fiesta o no. No se acabo usando porque todos son laborables )
 
-Tammbie se eliminaros los casos con company response in progres o untimley respone porque es un dato sobrante o inconlcuso.
+Tambien se eliminaron los casos con company response in progress o untimeley response porque es un dato sobrante o inconcluso.
 
+---
 
 ## Modelos de timely response?
+
 En el nb de entrenamiento intentara sacar el estado si no tiene el a pesar de que el modelo no lo use como tal.
+
+
 
 Para el modelo se elimianron la columna de compañia, y la respuesta de compañia in progress, Complaint ID,  Consumer disputed?, ZIP code,Date received, Date sent to company. No se metio feature engineering.
 Se metio resampleo con ADASYN.
-El primero se miro cp
+
 El modelo es un decision tree al que se optimizo con grid search buscando maxima accuracy . 
 El modelo NO TIENE PRERPROCESADO. Es necesario alimentarle directamente los ID. consultar los ID
-
-
 
 
 Se metio: 
@@ -181,7 +191,8 @@ Para sin company response:
 | Actual No       | 0.9407       | 0.0593        |
 | Actual Yes      | 0.1570       | 0.8430        |
 
-|| Feature  Importance
+
+|Caracteristicas| Importancia|
 |-----------------|--------------|
 |Sub-product   | 0.241308|
 |      Product   | 0.236710|
@@ -197,7 +208,9 @@ optimizado por auc-roc (equilibiro) (mas general que accuracy aunque no deberia 
 guardado como modelo modelo_timely_rf_sin_company.pkl 
 {'criterion': 'entropy', 'max_depth': 25, 'min_samples_leaf': 15}
 
-ligeramente mejor (roc acue de .90 vs 0.89) que un arbol normal aunque mas lento, se pierde mas interpretablidad, y es masmas sobreajustado por lo que no se usara (aun asi las apps v3 usan el modelo)
+Ligeramente mejor (roc acue de .90 vs 0.89) que un arbol normal aunque mas lento, se pierde mas interpretablidad, y es mas sobreajustado por lo que no se usara (aun asi las apps v3 usan el modelo)
+
+Elmodelo que se usa es modelo_timely_tree_sin_comp_def.pkl
 
 | Metric        | Value             |
 |---------------|-----------------|
@@ -215,17 +228,21 @@ ligeramente mejor (roc acue de .90 vs 0.89) que un arbol normal aunque mas lento
 | Weighted Avg  | 0.91      | 0.91   | 0.91     | 9913    |
 
 
-       Feature  Importance
-1  Sub-product    0.235141
-0      Product    0.204629
-4        State    0.203752
-3    Sub-issue    0.191250
-2        Issue    0.165228
+|Caracteristicas| Importancia|
+|---|---|
+| Sub-product  |  0.235141|
+| Product   | 0.204629|
+|State   | 0.203752|
+|State  |  0.203752|
+|Sub-issue  |  0.191250|
+|Issue  |  0.165228|
 
 
 
+---
 
 ## Modelo de Company Response
+
 Esto modelo se esta intentando que guardarlo como pipeline pero tengo problemas de guardado por lo que es necesario 
 
 
@@ -245,21 +262,21 @@ __main__.convert_to_str = convert_to_str
 os.chdir("../src")´
 <code>
 
-Por algun problema que tuve con formato pickle  ponerlo en la pipeline y es necesario engañar a python de que es una funcion base y no custom.
+Por algun problema que tuve con formato pickle al ponerlo en la pipeline y es necesario engañar a python de que es una funcion base y no custom.
 
-Todos estos se ha intentado seguir el mismo formato en forma de pipeline para que solo haya que llamarlo (y que no pase como con timely)
+Todos estos se ha intentado seguir el mismo formato en forma de pipeline para que solo haya que llamarlo (y que no pase como con timely).
 
-SE utilizara onehot encoders
+
 Se han intentado varios modelos entre ellos SVC, KNN, XBClassifier, gradient boost , clustering y (redes neuronales a pesar de que la pipelineno consigo integrarla). Pero sin feature engineering no dan un ninguno da un accuracy que llegue ni al 60%, y suelen rondar algo por encima del 50 %(mejor que tirar una moneda al aire) o solo predicen un valor para todos los casos. Por lo que no se va hablar de estos modelos.
 
-Despues se intento meter compañia y el dia de la semana y con random forest. Parece que ha mejordo ligeramente  ya que 
+Despues se intento meter compañia y el dia de la semana y con random forest. Parece que ha mejordo ligeramente  pero no sufuciente como para fiarse (acc 0.51)
 
 
 | Clase                  | Precisión | Recall | F1-Score | Soporte |
 |------------------------|-----------|--------|----------|---------|
 | 0                      | 0.29      | 0.55   | 0.38     | 1045    |
 | 1                      | 0.83      | 0.62   | 0.71     | 3760    |
-| **Accuracy Total**     |           |        | **0.60** | 4805    |
+| **Accuracy Total**     |           |        | 0.60     | 4805    |
 | **Promedio Macro**     | 0.56      | 0.58   | 0.54     | 4805    |
 | **Promedio Ponderado** | 0.71      | 0.60   | 0.64     | 4805    |
 
@@ -273,12 +290,12 @@ Confusion Matrix:
 | 1                          | 0.3819  | 0.6181  |
 
 
-Apenas es mejor que una moneda pero a fecha de 6/8 es el mejor mdelo
+Apenas es mejor que una moneda pero a fecha de 6/8 es el mejor mdelo.
 
-Mire que se si se unen  issue y subsisser parece que reduce el tiempo de entrenamiento ya quey en un onehot encoder no hace falta codificar los issues (a pesar de que luego se vaya a olvidar esto cuando lo necesito urgentemente) pero no se hasta que punto es fiable
+Mire que se si se unen  issue y subsissue parece que reduce el tiempo de entrenamiento ya quey en un onehot encoder no hace falta codificar los issues (a pesar de que luego se vaya a olvidar esto cuando lo necesito urgentemente) pero no se hasta que punto es fiable. Sin embargo el problema es underfitting.
 
-Me sospecho que lo que limita los modelos son la falta de datos (solo 6000 utiles) y de variables relacionadas (Ninguna de las variables tienen una diferencia poblacional clara para consumer disputed).
-SE necesitan mas datos y mas features.
+Sospecho que lo que limita los modelos son la falta de datos (solo 6000 utiles) y de variables relacionadas (Ninguna de las variables tienen una diferencia poblacional clara para consumer disputed).
+Se necesitan mas datos y mas features.
 
 Se ha intentado generar mas datos segun las pruebas:
 * CTGANSynthesizer 78%
@@ -286,16 +303,16 @@ Se ha intentado generar mas datos segun las pruebas:
 * TVAESynthesizer 79,33%
 * CopulaGANSynthesizer 78.74%
 
-GaussianCopulaSynthesizer en teoria es el mas similar aunque el CTGANSynthesizer hace que los modelos aprendan identifcar solo 1 de los dos. Esto no es la solucion de mi problema.
+GaussianCopulaSynthesizer en teoria es el mas similar aunque el CTGANSynthesizer hace que los modelos aprendan mejor. Aun asi solo identifcar solo 1 de los dos. Esto no es la solucion de mi problema.
 
 ---
 
 ### **Modelo definitivo red neuronal**
 
-Finalmete uso una red neuronal que prioriza accuracy y AUC-ROC. (Red neuronal_def.ipynb en carpeta notebook dispute y y el modelo_dispute_red.keras utiliza el preprocesado preprocesador_red.pkl")
+Finalmete uso una red neuronal que prioriza accuracy y AUC-ROC. (Red neuronal_def.ipynb en carpeta notebook dispute y y el modelo_dispute_red_def.keras utiliza el preprocesado preprocesador_red_def.pkl")
 
 He tenido que guardar el preprocesador y el modelo por separado porque no conseguia meterlo todo en una pipeline
-He usado un oversapler adasyn, ya que parece que mejora los estadisticos ligeramente frente a smote(0,85 vs 0,82 de accuracy)
+He usado un oversampler adasyn, ya que parece que mejora los estadisticos ligeramente frente a smote(0,85 vs 0,82 de accuracy)
 
 Las variabbles que se han usado son:
 * Product
@@ -308,9 +325,9 @@ Las variabbles que se han usado son:
 * weekday
 * Company
 
-Las variables tienen un preprocesado onehot (preprocesador_red.pkl en src)
+Las variables tienen un preprocesador onehot (preprocesador_red.pkl en src). Los dias de retraso no parecen ayudar a la prediccion.
 
-500 epoch, batch 64 validation split
+500 epoch, batch 64 validation split 0.20
 
 * input
 * hidden layer x4 256, 128, 64 32
@@ -319,13 +336,18 @@ Las variables tienen un preprocesado onehot (preprocesador_red.pkl en src)
     * dropoutr
 * Salida sigmoidea
 early stopping 20
-ReduceLROnPlateau
+ReduceLROnPlateau para evitar sobrejuste
 tarda 24 s en entrenar
 
-se m¡puede mejorar usando otras arquitecturas
+se podria mejorar usando probando otras arquitecturas como convolucionales
 Dificil de interpretar por muchas features
 
+Probe a meter los dias de retrasos pero empeora el modelo.
+
+---
+
 ## APPS de gradio
+
 en la carpeta de app se usaran las v4
 * v1 prototipo
 * v2 prototipo con modelos mas avanzados (basicamente v3 con los modelos que se usaron en v4)
@@ -351,9 +373,12 @@ Si no se da timely response lo predice y da los reslutado
             "response01": 1/0
             "prob": %
 
+Aunque parezca extraño la indea es introducir inprogress para luego cuando se haya respondido y actualizar la probabilidad cuando se sepa la respuesta.
 
+---
 
 ## API
+
 La API la realice antes de las primeras apps. 
 
 el nb de api son pruebas para comprobar el buen funcionamiento de las funciones de forma mas sencilla, pero no es el entorno 1:1 porque en el archivo main da errores distintos
@@ -370,7 +395,7 @@ Las predicciones devuelven
 * response01: 1/0
 * prob: %
 
-El threshol para la decision es de 0.5.
+El threshold para la decision es de 0.5.
 Utiliza fast API, y solo corre en la maquina que lo ejecute, y realmente todo esto sobra ya que las apps ya tienen opcion de integracion de API. 
 
 Todos ellos cogen ID directamente por lo que es necesario codificar las variables antes de usarlo. Esto resulta mas comodo para el uso de la API que poner el valor completo
@@ -383,9 +408,11 @@ Se va ha dejar de soportar el 22/8/2025 por falta de tiempo si se quiere API gra
 
 
 
-
+---
 
 ## Cosas que hacer en el futuro
 
-encontrar umbral
+Mejorar mejores modelos (probar convolucionales mas variables)
+encontrar umbral optimo
+Modelo de regresion de dias de retraso
 predecir company respone? (no haria esto para casos reales)

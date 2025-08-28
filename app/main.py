@@ -55,7 +55,7 @@ from tensorflow import keras
 modelo_dispute = keras.models.load_model("modelo_dispute_red_def.keras")
 
 
-#necesito esta funcion para que fincione porque no me dejaba exportarlo de otra forma
+#necesito esta funcion para que funcione porque no me dejaba exportarlo de otra forma
 
 
 
@@ -65,7 +65,7 @@ app=FastAPI()
 #GET
 @app.get("/")
 async def root():
-    return {"servidor": "Minority Report bancario","version": "v02"}
+    return {"servidor": "Minority Report bancario","version": "v04"}
 
 #GET
 @app.get("/items/{item_id}")
@@ -83,8 +83,8 @@ def predict_timely (
     State: int = 52):
     
     """
-    Los codigos numericos estan en docs ID.md, en IDipynb y tambien en los encoder en la carpeta src tool_preprocess.py
-    calcula el si se respondera a tiempo 
+    Los codigos numericos estan en docs ID.md, en ID.ipynb y tambien en los encoder en la carpeta src tool_preprocess.py
+    Calcula si se respondera a la queja a tiempo 
     Thershold de yes/no 0.5
     Valores por defecto:
     Product: Other financial service
@@ -161,14 +161,15 @@ def predict_dispute (
     Si timely response es none lo predice pero no devolvera los resultados, para consultarlos hacerlo por separado
     
     """
-
+    # si no tiene timely que lo prediga
     if timely == None:
         timely_res = (predict_timely(Issue=Issue,Subissue=Subissue , Product=Product, Subproduct=Subproduct , State=State ))
         timely=timely_res["response"]
+    #si los tiene que no lo haga y que devuelva un valor por defecto
     else:
         timely_res='Not calculated'
 
-    
+    #hago dataframe porque reutilizo el preprocesador de entrenamiento
     features=pd.DataFrame({
 
             "Product":[Product],
@@ -181,8 +182,10 @@ def predict_dispute (
             "Company response":[Companyresponse],
             "Timely response?": [timely]})
     
+    #Esto creo que ya no haria falta pero por si acaso lo dejo
     features["Timely response?"].replace([1,0], ["Yes", "No"], inplace=True)
     
+    # el modelo de dispute coge los datos en string, por lo que hay que pasarlos
     features["Product"] = product_encoder.inverse_transform(pd.DataFrame(features["Product"]))
     features["Sub-product"] = sub_product_encoder.inverse_transform(pd.DataFrame(features["Sub-product"]))
     features["Issue"] = Issue_enc.inverse_transform(pd.DataFrame(features["Issue"]))
@@ -192,13 +195,18 @@ def predict_dispute (
     features["Company response"] = Company_response_enc.inverse_transform(pd.DataFrame(features["Company response"]))
     features["weekday"]=week_enc.inverse_transform(pd.DataFrame(features["weekday"]))
 
+    # preproceesado
     features_pro=preprocesador.transform(features)
+    #prediccion del 0.5 y lo paso a int de python (si no, no funciona )
 
     pred=(modelo_dispute.predict(features_pro) >= 0.5).astype(int)
+    # Paso 1/0 a yes no
     if pred== 1:
         res="Yes"
     else :
         res="No"
+    # vuelvo a calcular la probabilidad porque se me olvido que podia hacerlo antes 
     prob=modelo_dispute.predict(features_pro)
 
+    #devuelvo a json, y de paso timely
     return {"response":res, "response01": int(pred), "prob": float(prob), "timely":timely_res}
