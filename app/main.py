@@ -37,7 +37,7 @@ def convert_to_str(X):
 __main__.convert_to_str = convert_to_str # basicamente engaña a py para esto sea de de base
 os.chdir("../src")
 # los saco porque el modelo dispute necesita decodificarlo
-from tool_preprocess import product_encoder,sub_product_encoder, Issue_enc, sub_Issue_enc, State_enc, Company_response_enc, Company_enc, week_enc
+from src.tool_preprocess import product_encoder,sub_product_encoder, Issue_enc, sub_Issue_enc, State_enc, Company_response_enc, Company_enc, week_enc
 preprocesador = joblib.load("preprocesador_red.pkl")
 import pickle
 
