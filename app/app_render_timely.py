@@ -19,10 +19,9 @@ python app_render_timely.py
 
 """
 
-sys.path.append(os.path.abspath("../src"))  # ajusta según tu estructura
-def convert_to_str(X):
-    return X.astype(str)
-__main__.convert_to_str = convert_to_str # basicamente engaña a py para esto sea de de base
+base_dir = os.path.dirname(__file__)             # .../app
+src_dir = os.path.join(base_dir, "..", "src")    # .../src
+sys.path.append(os.path.abspath(src_dir))
 
 # los saco porque el modelo dispute necesita decodificarlo
 from tool_preprocess import product_encoder,sub_product_encoder, Issue_enc, sub_Issue_enc, State_enc, Company_response_enc, Company_enc, week_enc
