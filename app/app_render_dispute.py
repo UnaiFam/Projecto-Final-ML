@@ -186,4 +186,4 @@ iface = gr.Interface(
     description="Introduce los parámetros para obtener la predicción."
 )
 if __name__ == "__main__":
-    iface.launch()
+    iface.launch(server_name="0.0.0.0", server_port=8000)

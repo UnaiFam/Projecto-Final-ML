@@ -7,6 +7,7 @@ from datetime import datetime
 import __main__
 from sklearn.preprocessing import OneHotEncoder
 import pickle
+from http.server import HTTPServer, SimpleHTTPRequestHandler
 import joblib
 from fastapi.responses import JSONResponse
 # a fecha de 2/8/2025 funcionaba el docs generado, nunca he comprobado la API como tal solo los DOCS generas
@@ -81,6 +82,13 @@ app=FastAPI()
 @app.get("/")
 async def root():
     return {"servidor": "Minority Report bancario","version": "v04"}
+
+host = "0.0.0.0"
+port = 8000
+
+with HTTPServer((host, port), SimpleHTTPRequestHandler) as server:
+    print(f"Server running on http://{host}:{port}")
+    server.serve_forever()
 
 #GET
 @app.get("/items/{item_id}")
