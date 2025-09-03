@@ -38,7 +38,7 @@ sys.path.append(os.path.abspath(src_dir))
 
 
 # los saco porque el modelo dispute necesita decodificarlo
-from tool_preprocess import product_encoder,sub_product_encoder, Issue_enc, sub_Issue_enc, State_enc, Company_response_enc, Company_enc, week_enc
+from ..src.tool_preprocess import product_encoder,sub_product_encoder, Issue_enc, sub_Issue_enc, State_enc, Company_response_enc, Company_enc, week_enc
 
 
 base_dir = os.path.dirname(__file__)
