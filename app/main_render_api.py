@@ -18,7 +18,7 @@ y abrir carpeta
 
 
 cd Projecto-Final-ML/app
-fastapi dev main.py
+fastapi dev main_render_api.py
 
 """
 # creo que la "IP" nunca es la misma
@@ -35,24 +35,39 @@ sys.path.append(os.path.abspath("../src"))  # ajusta según tu estructura
 def convert_to_str(X):
     return X.astype(str)
 __main__.convert_to_str = convert_to_str # basicamente engaña a py para esto sea de de base
-os.chdir("../src")
+
 # los saco porque el modelo dispute necesita decodificarlo
 from tool_preprocess import product_encoder,sub_product_encoder, Issue_enc, sub_Issue_enc, State_enc, Company_response_enc, Company_enc, week_enc
-preprocesador = joblib.load("preprocesador_red.pkl")
-import pickle
 
-os.chdir("../models")
+
+base_dir = os.path.dirname(__file__)
+model_path = os.path.join(base_dir, "..", "src", "preprocesador_red.pkl")
+
+with open(model_path, "rb") as f:
+    preprocesador = joblib.load(f)
+
+
+
 #saco las pipelines /modelos
+model_path = os.path.join(base_dir,"..", "models", "modelo_timely_tree_sin_comp_def.pkl")
+
+with open(model_path, "rb") as f:
+    modelo_timely = joblib.load(f)
 
 
-modelo_timely=joblib.load("modelo_timely_tree_sin_comp_def.pkl")
 # libreria como pickle porque tuve problemas con pickle 
 import dill
 
 
 # saco el modelo dispute
 from tensorflow import keras
-modelo_dispute = keras.models.load_model("modelo_dispute_red_def.keras")
+
+
+model_path = os.path.join(base_dir,"..", "models", "modelo_dispute_red_def.keras")
+
+
+modelo_dispute = keras.models.load_model(model_path)
+
 
 
 #necesito esta funcion para que funcione porque no me dejaba exportarlo de otra forma

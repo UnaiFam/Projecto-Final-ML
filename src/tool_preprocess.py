@@ -293,13 +293,15 @@ def Timely_decoder(code: int) -> str:
         raise ValueError(f"Código inválido: {code}")
 
 
-#base_dir = os.path.dirname("src")  # carpeta donde vive este script
-#companies = os.path.join(base_dir, "company_names.txt")
+base_dir = os.path.dirname(__file__)  # carpeta donde vive este script
+companies_dir = os.path.join(base_dir, "company_names.txt")
 
-companies= open("company_names.txt", "r")
 
-Company_enc = LabelEncoder()
-Company_enc.fit(pd.DataFrame(companies.read().split(";")))
+with open(companies_dir, "r", encoding="utf-8") as f:
+    companies = f.read().split(";")
+
+Company_enc=LabelEncoder()    
+Company_enc.fit(pd.DataFrame(companies))
 
 
 
