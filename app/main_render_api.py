@@ -233,3 +233,7 @@ def predict_dispute (
 
     #devuelvo a json, y de paso timely
     return {"response":res, "response01": int(pred), "prob": float(prob), "timely":timely_res}
+
+import uvicorn
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
