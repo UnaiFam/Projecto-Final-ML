@@ -230,5 +230,3 @@ def predict_dispute (
     return {"response":res, "response01": int(pred), "prob": float(prob), "timely":timely_res}
 
 import uvicorn
-if __name__ == "__main__":
-    uvicorn.run()
